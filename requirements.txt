@@ -1,0 +1,15 @@
+# Основные зависимости
+python-telegram-bot==20.7
+sqlalchemy==2.0.23
+aiosqlite==0.19.0
+loguru==0.7.2
+pydantic==2.5.0
+python-dotenv==1.0.0
+
+# Планировщик
+APScheduler==3.10.4
+
+# Дополнительные зависимости
+asyncio-mqtt==0.16.1
+aiofiles==23.2.1
+pytz==2023.3
