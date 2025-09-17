@@ -62,3 +62,7 @@ async def payment_callback_handler(update: Update, context: ContextTypes.DEFAULT
         
     except Exception as e:
         logger.error(f"Ошибка обработки callback'а платежа: {e}")
+
+
+# Экспорт основного обработчика
+payment_handler = payment_callback_handler

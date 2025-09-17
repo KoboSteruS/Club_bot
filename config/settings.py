@@ -35,7 +35,9 @@ class Settings(BaseSettings):
         return [int(x.strip()) for x in self.ADMIN_IDS.split(",") if x.strip()]
     
     # Настройки платежей
-    PAYMENT_PROVIDER: str = Field(default="freekassa", env="PAYMENT_PROVIDER")  # freekassa, cloudpayments, telegram
+    PAYMENT_PROVIDER: str = Field(default="cryptobot", env="PAYMENT_PROVIDER")  # cryptobot, freekassa, telegram
+    CRYPTOBOT_TOKEN: str = Field(default="", env="CRYPTOBOT_TOKEN")
+    BOT_USERNAME: str = Field(default="osnovapti_bot", env="BOT_USERNAME")
     FREKASSA_MERCHANT_ID: str = Field(default="", env="FREKASSA_MERCHANT_ID")
     FREKASSA_SECRET_KEY: str = Field(default="", env="FREKASSA_SECRET_KEY")
     FREKASSA_API_KEY: str = Field(default="", env="FREKASSA_API_KEY")

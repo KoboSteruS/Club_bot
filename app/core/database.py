@@ -81,6 +81,12 @@ async def get_db_session():
 async def init_database() -> None:
     """Инициализация базы данных."""
     try:
+        # Импортируем все модели для регистрации в метаданных
+        from app.models import (
+            User, Payment, Ritual, UserRitual, RitualResponse, Report, Goal,
+            ChatActivity, UserActivity, ActivitySummary, WeeklyReport
+        )
+        
         async with engine.begin() as conn:
             # Создание всех таблиц
             await conn.run_sync(Base.metadata.create_all)

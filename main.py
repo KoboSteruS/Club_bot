@@ -34,7 +34,8 @@ async def main():
         # Получаем информацию о боте
         try:
             bot_info = await bot.get_me()
-            logger.info(f"🤖 Бот запущен: @{bot_info.username}")
+            username = bot_info.get("username", "неизвестно")
+            logger.info(f"🤖 Бот запущен: @{username}")
         except Exception as e:
             logger.warning(f"⚠️ Не удалось получить информацию о боте: {e}")
         

@@ -461,3 +461,6 @@ async def show_report_history(update: Update, context: ContextTypes.DEFAULT_TYPE
     except Exception as e:
         logger.error(f"Ошибка в show_report_history: {e}")
         await update.callback_query.answer("❌ Произошла ошибка")
+
+
+# Экспорт основного обработчика (уже определен в начале файла)

@@ -43,9 +43,8 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 
                 # Отправляем приветственное сообщение с reply keyboard
                 await telegram_service.send_welcome_message(
-                    chat_id=chat_id,
-                    user_name=user.first_name or user.username or str(user.id),
-
+                    user_id=user.id,
+                    username=user.first_name or user.username or str(user.id)
                 )
             else:
                 # Создаем нового пользователя
@@ -61,9 +60,8 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 
                 # Отправляем приветственное сообщение с reply keyboard
                 await telegram_service.send_welcome_message(
-                    chat_id=chat_id,
-                    user_name=user.first_name or user.username or str(user.id),
-
+                    user_id=user.id,
+                    username=user.first_name or user.username or str(user.id)
                 )
         
     except Exception as e:
@@ -78,5 +76,5 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
             logger.error(f"Ошибка отправки сообщения об ошибке: {reply_error}")
 
 
-# Создаем обработчик команды
-start_handler = CommandHandler("start", start_command_handler)
+# Экспортируем функцию-обработчик
+start_handler = start_command_handler

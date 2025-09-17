@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 from config.settings import settings
-from app.core.database import get_database
+from app.core.database import get_db_session
 from app.services.report_service import ReportService
 from app.services.goal_service import GoalService
 from app.services.telegram_service import TelegramService
@@ -143,6 +143,14 @@ class SchedulerService:
                 name='Обработка дневной активности'
             )
             
+            # Еженедельный анализ активности (воскресенье в 10:00)
+            self.scheduler.add_job(
+                self.send_weekly_activity_analysis,
+                CronTrigger(day_of_week='sun', hour=10, minute=0),
+                id='weekly_activity',
+                name='Еженедельный анализ активности'
+            )
+            
             # Генерация еженедельных отчетов (воскресенье в 23:00)
             self.scheduler.add_job(
                 self.generate_weekly_reports,
@@ -169,7 +177,7 @@ class SchedulerService:
         try:
             logger.info("Начинаем отправку персональных напоминаний об отчетах")
             
-            async for session in get_database():
+            async with get_db_session() as session:
                 report_service = ReportService(session)
                 telegram_service = TelegramService(self.bot)
                 
@@ -217,7 +225,7 @@ class SchedulerService:
         try:
             logger.info("Начинаем отправку напоминаний о целях")
             
-            async for session in get_database():
+            async with get_db_session() as session:
                 goal_service = GoalService(session)
                 telegram_service = TelegramService(self.bot)
                 
@@ -249,7 +257,7 @@ class SchedulerService:
         try:
             logger.info("Начинаем анализ активности")
             
-            async for session in get_database():
+            async with get_db_session() as session:
                 report_service = ReportService(session)
                 telegram_service = TelegramService(self.bot)
                 
@@ -274,7 +282,7 @@ class SchedulerService:
         try:
             logger.info("Отмечаем пропущенные отчеты")
             
-            async for session in get_database():
+            async with get_db_session() as session:
                 report_service = ReportService(session)
                 
                 # Отмечаем как пропущенные отчеты старше 24 часов
@@ -292,7 +300,7 @@ class SchedulerService:
         try:
             logger.info("Проверяем истекающие подписки")
             
-            async for session in get_database():
+            async with get_db_session() as session:
                 reminder_service = ReminderService(session)
                 telegram_service = TelegramService(self.bot)
                 
@@ -369,6 +377,40 @@ class SchedulerService:
         """Отправка сообщений прогрева пользователям."""
         # Прогрев не используется в ClubBot
         logger.info("Прогрев не используется в ClubBot")
+    
+    async def send_weekly_activity_analysis(self) -> None:
+        """Отправка еженедельного анализа активности согласно ТЗ."""
+        try:
+            logger.info("Начинаем еженедельный анализ активности")
+            
+            async with get_db_session() as session:
+                from app.services.analytics_service import AnalyticsService
+                from app.services.telegram_service import TelegramService
+                
+                analytics_service = AnalyticsService(session)
+                telegram_service = TelegramService(self.bot)
+                
+                # Получаем статистику активности
+                stats = await analytics_service.get_weekly_activity_stats()
+                
+                # Отправляем детальный отчет админу
+                admin_report = await analytics_service.get_admin_activity_report()
+                await telegram_service.send_admin_activity_report({
+                    'active_users': ', '.join([f"@{u}" for u in stats['top_active']]),
+                    'inactive_users': ', '.join([f"@{u}" for u in stats['connecting']]),
+                    'detailed_report': admin_report
+                })
+                
+                # Отправляем публичный отчет в группу
+                await telegram_service.send_public_activity_report({
+                    'top_active': stats['top_active'],
+                    'connecting': stats['connecting']
+                })
+                
+                logger.info(f"Отправлен еженедельный анализ: {stats['active_users']} активных из {stats['total_users']}")
+                
+        except Exception as e:
+            logger.error(f"Ошибка в send_weekly_activity_analysis: {e}")
         return
         
         # try:
@@ -511,7 +553,7 @@ class SchedulerService:
             if not (6 <= current_time.hour <= 9):
                 return
             
-            async with get_database() as session:
+            async with get_db_session() as session:
                 ritual_service = RitualService(session)
                 telegram_service = TelegramService(self.bot)
                 
@@ -561,7 +603,7 @@ class SchedulerService:
             if not (20 <= current_time.hour <= 22):
                 return
             
-            async with get_database() as session:
+            async with get_db_session() as session:
                 ritual_service = RitualService(session)
                 telegram_service = TelegramService(self.bot)
                 
@@ -607,7 +649,7 @@ class SchedulerService:
         try:
             current_time = datetime.now()
             
-            async with get_database() as session:
+            async with get_db_session() as session:
                 ritual_service = RitualService(session)
                 telegram_service = TelegramService(self.bot)
                 
@@ -662,7 +704,7 @@ class SchedulerService:
     async def process_daily_activity(self) -> None:
         """Обработка дневной активности пользователей."""
         try:
-            async with get_database() as session:
+            async with get_db_session() as session:
                 activity_service = ActivityService(session)
                 
                 # Обрабатываем активность за вчерашний день
@@ -679,7 +721,7 @@ class SchedulerService:
     async def generate_weekly_reports(self) -> None:
         """Генерация еженедельных отчетов активности."""
         try:
-            async with get_database() as session:
+            async with get_db_session() as session:
                 activity_service = ActivityService(session)
                 
                 # Генерируем отчет за прошедшую неделю
@@ -699,7 +741,7 @@ class SchedulerService:
     async def publish_weekly_reports(self) -> None:
         """Публикация еженедельных отчетов в группе."""
         try:
-            async with get_database() as session:
+            async with get_db_session() as session:
                 from sqlalchemy import select, and_
                 from app.models.activity import WeeklyReport
                 from datetime import date, timedelta

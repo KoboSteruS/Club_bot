@@ -734,3 +734,6 @@ async def show_ritual_stats_detail(update: Update, context: ContextTypes.DEFAULT
     except Exception as e:
         logger.error(f"Ошибка в show_ritual_stats_detail: {e}")
         await update.callback_query.answer("❌ Произошла ошибка")
+
+
+# Экспорт основного обработчика (уже определен в начале файла)

@@ -6,11 +6,12 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 from loguru import logger
 
 from .start import start_handler
+from .main import main_handler
 from .payment import payment_handler
 from .reports import report_handler
 from .rituals import ritual_handler
 from .goals import goal_handler
-from .admin import admin_handler
+from .admin_simple import admin_handler
 
 
 def register_handlers(application: Application) -> None:
@@ -20,6 +21,7 @@ def register_handlers(application: Application) -> None:
         application.add_handler(CommandHandler("start", start_handler))
         
         # Callback queries
+        application.add_handler(CallbackQueryHandler(main_handler, pattern="^(check_subscription|payment_options|about_club|back_to_start|subscription_confirmed|pay_|check_payment_)"))
         application.add_handler(CallbackQueryHandler(payment_handler, pattern="^payment"))
         application.add_handler(CallbackQueryHandler(report_handler, pattern="^report"))
         application.add_handler(CallbackQueryHandler(ritual_handler, pattern="^ritual"))
@@ -39,6 +41,7 @@ def register_handlers(application: Application) -> None:
 __all__ = [
     "register_handlers",
     "start_handler",
+    "main_handler",
     "payment_handler", 
     "report_handler",
     "ritual_handler",

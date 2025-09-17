@@ -91,6 +91,25 @@ class PaymentService:
             logger.error(f"Ошибка получения платежа по ID {payment_id}: {e}")
             return None
     
+    async def get_payment_by_external_id(self, external_id: str) -> Optional[Payment]:
+        """
+        Получение платежа по внешнему ID (например, invoice_id от CryptoBot).
+        
+        Args:
+            external_id: Внешний ID платежа
+            
+        Returns:
+            Optional[Payment]: Платеж или None
+        """
+        try:
+            result = await self.session.execute(
+                select(Payment).where(Payment.external_payment_id == external_id)
+            )
+            return result.scalar_one_or_none()
+        except Exception as e:
+            logger.error(f"Ошибка получения платежа по внешнему ID {external_id}: {e}")
+            return None
+    
     # Disabled FreeKassa methods
     # async def get_payment_by_freekassa_id(self, freekassa_payment_id: str) -> Optional[Payment]:
         """
