@@ -29,8 +29,8 @@ class PaymentBase(BaseModel):
     @validator("currency")
     def validate_currency(cls, v: str) -> str:
         """Валидация валюты."""
-        if len(v) != 3:
-            raise ValueError("Код валюты должен состоять из 3 символов")
+        if len(v) < 3 or len(v) > 4:
+            raise ValueError("Код валюты должен состоять из 3-4 символов")
         return v.upper()
 
 

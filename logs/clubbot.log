@@ -1218,3 +1218,97 @@ WHERE users.status = ? AND (users.subscription_until IS NULL OR date(users.subsc
 2025-09-17 15:53:23 | INFO     | app.core.database:close_database:102 - Соединение с базой данных закрыто
 2025-09-17 15:53:23 | INFO     | app.bot.bot:stop:89 - Telegram бот успешно остановлен
 2025-09-17 15:53:23 | INFO     | __main__:main:51 - 👋 ClubBot остановлен
+2025-09-17 16:13:25 | INFO     | __main__:main:23 - 🚀 Запуск ClubBot...
+2025-09-17 16:13:25 | INFO     | __main__:main:24 - 📱 Название: ОСНОВА ПУТИ - ClubBot
+2025-09-17 16:13:25 | INFO     | __main__:main:25 - 🔧 Режим отладки: False
+2025-09-17 16:13:25 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
+2025-09-17 16:13:25 | INFO     | __main__:main:29 - ✅ База данных создана/обновлена
+2025-09-17 16:13:27 | INFO     | app.services.scheduler_service:_setup_jobs:170 - Планировщик задач настроен
+2025-09-17 16:13:28 | INFO     | app.bot.handlers:register_handlers:34 - ✅ Все обработчики зарегистрированы
+2025-09-17 16:13:28 | INFO     | app.bot.bot:_setup_handlers:38 - Обработчики команд настроены
+2025-09-17 16:13:28 | INFO     | __main__:main:38 - 🤖 Бот запущен: @osnovapti_bot
+2025-09-17 16:13:28 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
+2025-09-17 16:13:28 | INFO     | app.bot.bot:start:45 - База данных инициализирована
+2025-09-17 16:13:28 | INFO     | app.services.scheduler_service:start:347 - Планировщик задач запущен
+2025-09-17 16:13:28 | INFO     | app.bot.bot:start:49 - Планировщик задач запущен
+2025-09-17 16:13:28 | INFO     | app.bot.bot:start:52 - Запуск Telegram бота...
+2025-09-17 16:13:28 | INFO     | app.bot.bot:start:57 - Telegram бот успешно запущен
+2025-09-17 16:14:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 16:14:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 16:15:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 16:15:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 16:16:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 16:16:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 16:17:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 16:17:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 16:17:40 | ERROR    | app.services.telegram_service:check_user_subscription:266 - Ошибка проверки подписки пользователя 1670311707 на @osnovaputi: Member list is inaccessible
+2025-09-17 16:17:43 | ERROR    | app.services.telegram_service:check_user_subscription:266 - Ошибка проверки подписки пользователя 1670311707 на @osnovaputi: Member list is inaccessible
+2025-09-17 16:17:51 | ERROR    | app.services.telegram_service:check_user_subscription:266 - Ошибка проверки подписки пользователя 1670311707 на @osnovaputi: Member list is inaccessible
+2025-09-17 16:17:51 | ERROR    | app.bot.handlers.main:handle_subscription_check:141 - Ошибка в handle_subscription_check: Message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message
+2025-09-17 16:17:53 | ERROR    | app.services.telegram_service:check_user_subscription:266 - Ошибка проверки подписки пользователя 1670311707 на @osnovaputi: Member list is inaccessible
+2025-09-17 16:17:53 | ERROR    | app.bot.handlers.main:handle_subscription_check:141 - Ошибка в handle_subscription_check: Message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message
+2025-09-17 16:17:53 | ERROR    | app.services.telegram_service:check_user_subscription:266 - Ошибка проверки подписки пользователя 1670311707 на @osnovaputi: Member list is inaccessible
+2025-09-17 16:17:53 | ERROR    | app.bot.handlers.main:handle_subscription_check:141 - Ошибка в handle_subscription_check: Message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message
+2025-09-17 16:17:58 | INFO     | app.bot.bot:stop:76 - Остановка Telegram бота...
+2025-09-17 16:17:58 | INFO     | app.services.scheduler_service:stop:355 - Планировщик задач остановлен
+2025-09-17 16:17:58 | INFO     | app.core.database:close_database:102 - Соединение с базой данных закрыто
+2025-09-17 16:17:58 | INFO     | app.bot.bot:stop:89 - Telegram бот успешно остановлен
+2025-09-17 16:17:58 | INFO     | __main__:main:51 - 👋 ClubBot остановлен
+2025-09-17 16:19:26 | INFO     | __main__:main:23 - 🚀 Запуск ClubBot...
+2025-09-17 16:19:26 | INFO     | __main__:main:24 - 📱 Название: ОСНОВА ПУТИ - ClubBot
+2025-09-17 16:19:26 | INFO     | __main__:main:25 - 🔧 Режим отладки: False
+2025-09-17 16:19:26 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
+2025-09-17 16:19:26 | INFO     | __main__:main:29 - ✅ База данных создана/обновлена
+2025-09-17 16:19:29 | INFO     | app.services.scheduler_service:_setup_jobs:170 - Планировщик задач настроен
+2025-09-17 16:19:29 | INFO     | app.bot.handlers:register_handlers:34 - ✅ Все обработчики зарегистрированы
+2025-09-17 16:19:29 | INFO     | app.bot.bot:_setup_handlers:38 - Обработчики команд настроены
+2025-09-17 16:19:29 | INFO     | __main__:main:38 - 🤖 Бот запущен: @osnovapti_bot
+2025-09-17 16:19:29 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
+2025-09-17 16:19:29 | INFO     | app.bot.bot:start:45 - База данных инициализирована
+2025-09-17 16:19:29 | INFO     | app.services.scheduler_service:start:347 - Планировщик задач запущен
+2025-09-17 16:19:29 | INFO     | app.bot.bot:start:49 - Планировщик задач запущен
+2025-09-17 16:19:29 | INFO     | app.bot.bot:start:52 - Запуск Telegram бота...
+2025-09-17 16:19:29 | INFO     | app.bot.bot:start:57 - Telegram бот успешно запущен
+2025-09-17 16:20:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 16:20:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 16:20:35 | INFO     | app.services.telegram_service:check_user_subscription:251 - 🧪 ЗАГЛУШКА: Пользователь 1670311707 считается подписанным на @osnovaputi
+2025-09-17 16:20:35 | INFO     | app.bot.handlers.start:start_command_handler:50 - Пользователь 1670311707 уже существует и подписан на @osnovaputi
+2025-09-17 16:20:37 | INFO     | app.services.telegram_service:check_user_subscription:251 - 🧪 ЗАГЛУШКА: Пользователь 1670311707 считается подписанным на @osnovaputi
+2025-09-17 16:20:48 | INFO     | app.services.telegram_service:check_user_subscription:251 - 🧪 ЗАГЛУШКА: Пользователь 1670311707 считается подписанным на @osnovaputi
+2025-09-17 16:20:58 | INFO     | app.services.crypto_service:create_invoice:75 - Создан счет CryptoBot: 33784862 на 30.00 USDT
+2025-09-17 16:20:58 | ERROR    | app.core.database:get_db_session:74 - Ошибка в сессии базы данных: 2 validation errors for PaymentCreate
+currency
+  Value error, Код валюты должен состоять из 3 символов [type=value_error, input_value='USDT', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.8/v/value_error
+user_id
+  Input should be a valid string [type=string_type, input_value=1670311707, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.8/v/string_type
+2025-09-17 16:20:58 | ERROR    | app.bot.handlers.main:handle_payment_create:321 - Ошибка в handle_payment_create: 2 validation errors for PaymentCreate
+currency
+  Value error, Код валюты должен состоять из 3 символов [type=value_error, input_value='USDT', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.8/v/value_error
+user_id
+  Input should be a valid string [type=string_type, input_value=1670311707, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.8/v/string_type
+2025-09-17 16:21:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 16:21:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 16:21:01 | INFO     | app.bot.bot:stop:76 - Остановка Telegram бота...
+2025-09-17 16:21:01 | INFO     | app.services.scheduler_service:stop:355 - Планировщик задач остановлен
+2025-09-17 16:21:01 | INFO     | app.core.database:close_database:102 - Соединение с базой данных закрыто
+2025-09-17 16:21:01 | INFO     | app.bot.bot:stop:89 - Telegram бот успешно остановлен
+2025-09-17 16:21:01 | INFO     | __main__:main:51 - 👋 ClubBot остановлен
+2025-09-17 16:23:06 | INFO     | __main__:main:23 - 🚀 Запуск ClubBot...
+2025-09-17 16:23:06 | INFO     | __main__:main:24 - 📱 Название: ОСНОВА ПУТИ - ClubBot
+2025-09-17 16:23:06 | INFO     | __main__:main:25 - 🔧 Режим отладки: False
+2025-09-17 16:23:06 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
+2025-09-17 16:23:06 | INFO     | __main__:main:29 - ✅ База данных создана/обновлена
+2025-09-17 16:23:08 | INFO     | app.services.scheduler_service:_setup_jobs:170 - Планировщик задач настроен
+2025-09-17 16:23:09 | INFO     | app.bot.handlers:register_handlers:34 - ✅ Все обработчики зарегистрированы
+2025-09-17 16:23:09 | INFO     | app.bot.bot:_setup_handlers:38 - Обработчики команд настроены
+2025-09-17 16:23:09 | INFO     | __main__:main:38 - 🤖 Бот запущен: @osnovapti_bot
+2025-09-17 16:23:09 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
+2025-09-17 16:23:09 | INFO     | app.bot.bot:start:45 - База данных инициализирована
+2025-09-17 16:23:09 | INFO     | app.services.scheduler_service:start:347 - Планировщик задач запущен
+2025-09-17 16:23:09 | INFO     | app.bot.bot:start:49 - Планировщик задач запущен
+2025-09-17 16:23:09 | INFO     | app.bot.bot:start:52 - Запуск Telegram бота...
+2025-09-17 16:23:09 | INFO     | app.bot.bot:start:57 - Telegram бот успешно запущен

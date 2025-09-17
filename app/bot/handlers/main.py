@@ -148,20 +148,20 @@ async def handle_payment_options(update: Update, context: ContextTypes.DEFAULT_T
         message = """
 💳 <b>Выбор тарифа участия</b>
 
-<b>Доступные тарифы:</b>
+🧪 <b>ТЕСТОВЫЙ РЕЖИМ - Копеечные цены!</b>
 
-💎 <b>1 месяц - 30 USDT</b>
+💎 <b>1 месяц - 0.1 USDT</b> (ТЕСТ)
 • Полный доступ к клубу на месяц
 • Ежедневные ритуалы ЯДРА
 • Система отчетности
 • Поддержка сообщества
 
-💎 <b>3 месяца - 80 USDT</b> (скидка 10%)
+💎 <b>3 месяца - 0.2 USDT</b> (ТЕСТ)
 • Все возможности 1 месяца
 • Более глубокое погружение
 • Формирование устойчивых привычек
 
-💎 <b>Подписка - 300 USDT</b> (скидка 15%)
+💎 <b>Подписка - 0.5 USDT</b> (ТЕСТ)
 • Безлимитный доступ
 • Максимальный результат
 • Полная трансформация
@@ -171,13 +171,13 @@ async def handle_payment_options(update: Update, context: ContextTypes.DEFAULT_T
 • Быстро, анонимно, без банков
 • Автоматическое подтверждение
 
-Выбери подходящий тариф:
+⚡ Тестовые цены для отладки!
 """
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("💎 1 месяц - 30 USDT", callback_data="pay_1month")],
-            [InlineKeyboardButton("💎 3 месяца - 80 USDT", callback_data="pay_3months")],
-            [InlineKeyboardButton("💎 Подписка - 300 USDT", callback_data="pay_subscription")],
+            [InlineKeyboardButton("💎 1 месяц - 0.1 USDT", callback_data="pay_1month")],
+            [InlineKeyboardButton("💎 3 месяца - 0.2 USDT", callback_data="pay_3months")],
+            [InlineKeyboardButton("💎 Подписка - 0.5 USDT", callback_data="pay_subscription")],
             [InlineKeyboardButton("🔙 Назад", callback_data="back_to_start")]
         ])
         
@@ -298,7 +298,7 @@ async def handle_payment_create(update: Update, context: ContextTypes.DEFAULT_TY
                 
                 from app.schemas.payment import PaymentCreate
                 payment_data = PaymentCreate(
-                    user_id=user.id,
+                    user_id=str(user.id),  # Конвертируем в строку
                     amount=float(tariff_info["price"]),
                     currency=tariff_info["asset"],  # Используем asset вместо currency
                     payment_method="cryptobot",
