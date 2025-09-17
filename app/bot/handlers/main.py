@@ -294,11 +294,26 @@ async def handle_payment_create(update: Update, context: ContextTypes.DEFAULT_TY
             # Сохраняем информацию о счете в базе данных
             async with get_db_session() as session:
                 from app.services.payment_service import PaymentService
+                from app.services.user_service import UserService
+                
                 payment_service = PaymentService(session)
+                user_service = UserService(session)
+                
+                # Получаем пользователя из базы данных по Telegram ID
+                db_user = await user_service.get_user_by_telegram_id(user.id)
+                if not db_user:
+                    logger.error(f"Пользователь с Telegram ID {user.id} не найден в базе данных")
+                    await query.edit_message_text(
+                        "❌ Ошибка: пользователь не найден. Попробуйте команду /start.",
+                        reply_markup=InlineKeyboardMarkup([
+                            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_start")]
+                        ])
+                    )
+                    return
                 
                 from app.schemas.payment import PaymentCreate
                 payment_data = PaymentCreate(
-                    user_id=str(user.id),  # Конвертируем в строку
+                    user_id=str(db_user.id),  # Используем UUID пользователя из БД
                     amount=float(tariff_info["price"]),
                     currency=tariff_info["asset"],  # Используем asset вместо currency
                     payment_method="cryptobot",
@@ -307,7 +322,7 @@ async def handle_payment_create(update: Update, context: ContextTypes.DEFAULT_TY
                 )
                 
                 await payment_service.create_payment(payment_data)
-                logger.info(f"Создан платеж для пользователя {user.id}: {invoice['invoice_id']}")
+                logger.info(f"Создан платеж для пользователя {user.id} (UUID: {db_user.id}): {invoice['invoice_id']}")
                 
         else:
             await query.edit_message_text(
