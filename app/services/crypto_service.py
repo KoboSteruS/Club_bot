@@ -26,14 +26,14 @@ class CryptoService:
         self.api_url = "https://pay.crypt.bot/api"
         self.token = getattr(settings, 'CRYPTOBOT_TOKEN', '')
         
-    async def create_invoice(self, amount: Decimal, currency: str = "RUB", 
+    async def create_invoice(self, amount: Decimal, asset: str = "USDT", 
                            description: str = "", user_id: int = None) -> Optional[Dict[str, Any]]:
         """
-        Создание счета для оплаты через CryptoBot.
+        Создание счета для оплаты через CryptoBot согласно документации.
         
         Args:
             amount: Сумма к оплате
-            currency: Валюта (RUB, USD, EUR)
+            asset: Криптовалюта (USDT, TON, BTC, ETH)
             description: Описание платежа
             user_id: ID пользователя Telegram
             
@@ -45,10 +45,10 @@ class CryptoService:
                 logger.error("CRYPTOBOT_TOKEN не настроен")
                 return None
                 
-            # Данные для создания счета
+            # Данные для создания счета согласно CryptoBot API
             payload = {
                 "amount": str(amount),
-                "fiat": currency,
+                "asset": asset,
                 "description": description or "Оплата участия в клубе ОСНОВА ПУТИ",
                 "hidden_message": f"Добро пожаловать в клуб! User ID: {user_id}",
                 "paid_btn_name": "callback",
@@ -59,21 +59,20 @@ class CryptoService:
             }
             
             headers = {
-                "Crypto-Pay-API-Token": self.token,
-                "Content-Type": "application/json"
+                "Crypto-Pay-API-Token": self.token
             }
             
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     f"{self.api_url}/createInvoice",
-                    json=payload,
-                    headers=headers
+                    headers=headers,
+                    data=payload  # Используем data вместо json согласно примеру GPT
                 ) as response:
                     if response.status == 200:
                         data = await response.json()
                         if data.get("ok"):
                             result = data.get("result", {})
-                            logger.info(f"Создан счет CryptoBot: {result.get('invoice_id')}")
+                            logger.info(f"Создан счет CryptoBot: {result.get('invoice_id')} на {amount} {asset}")
                             return result
                         else:
                             logger.error(f"Ошибка CryptoBot API: {data.get('error')}")
@@ -151,19 +150,22 @@ class CryptoService:
     
     def get_payment_url(self, invoice_data: Dict[str, Any]) -> str:
         """
-        Получение URL для оплаты.
+        Получение URL для оплаты согласно CryptoBot API.
         
         Args:
             invoice_data: Данные счета
             
         Returns:
-            str: URL для оплаты
+            str: URL для оплаты (bot_invoice_url для Telegram)
         """
-        return invoice_data.get("pay_url", "")
+        # Приоритет: bot_invoice_url (открывается в Telegram) -> web_app_invoice_url
+        return (invoice_data.get("bot_invoice_url") or 
+                invoice_data.get("web_app_invoice_url") or 
+                invoice_data.get("mini_app_invoice_url", ""))
     
     def get_tariff_info(self, tariff: str) -> Dict[str, Any]:
         """
-        Получение информации о тарифе.
+        Получение информации о тарифе для криптоплатежей.
         
         Args:
             tariff: Тип тарифа (1month, 3months, subscription)
@@ -171,25 +173,26 @@ class CryptoService:
         Returns:
             Dict: Информация о тарифе
         """
+        # Примерные цены в USDT (можно настроить через админку)
         tariffs = {
             "1month": {
                 "name": "1 месяц",
-                "price": Decimal("2990"),
-                "currency": "RUB",
+                "price": Decimal("30.00"),  # ~2990 рублей в USDT
+                "asset": "USDT",
                 "duration_days": 30,
                 "description": "Доступ к клубу ОСНОВА ПУТИ на 1 месяц"
             },
             "3months": {
-                "name": "3 месяца",
-                "price": Decimal("7990"),
-                "currency": "RUB", 
+                "name": "3 месяца", 
+                "price": Decimal("80.00"),  # ~7990 рублей в USDT (скидка 10%)
+                "asset": "USDT",
                 "duration_days": 90,
                 "description": "Доступ к клубу ОСНОВА ПУТИ на 3 месяца (скидка 10%)"
             },
             "subscription": {
                 "name": "Подписка",
-                "price": Decimal("29990"),
-                "currency": "RUB",
+                "price": Decimal("300.00"),  # ~29990 рублей в USDT (скидка 15%)
+                "asset": "USDT",
                 "duration_days": 365,
                 "description": "Безлимитный доступ к клубу ОСНОВА ПУТИ (скидка 15%)"
             }
