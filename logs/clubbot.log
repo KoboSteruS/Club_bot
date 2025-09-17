@@ -537,3 +537,53 @@ WHERE users.status = ? AND (users.subscription_until IS NULL OR date(users.subsc
 2025-09-17 10:39:57 | INFO     | app.bot.bot:start:57 - Telegram бот успешно запущен
 2025-09-17 10:40:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
 2025-09-17 10:40:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:41:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:41:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:42:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:42:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:42:16 | INFO     | app.bot.handlers.start:start_command_handler:42 - Пользователь 1670311707 уже существует
+2025-09-17 10:43:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:43:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:44:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:44:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:45:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:45:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:46:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:46:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:47:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:47:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:48:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:48:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:49:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:49:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:50:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:50:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:50:40 | INFO     | app.bot.handlers.start:start_command_handler:42 - Пользователь 1670311707 уже существует
+2025-09-17 10:51:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:51:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:52:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:52:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:53:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:53:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:53:51 | ERROR    | app.services.crypto_service:create_invoice:45 - CRYPTOBOT_TOKEN не настроен
+2025-09-17 10:54:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:54:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:55:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:55:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:56:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-17 10:56:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-17 10:56:21 | INFO     | __main__:main:23 - 🚀 Запуск ClubBot...
+2025-09-17 10:56:21 | INFO     | __main__:main:24 - 📱 Название: ОСНОВА ПУТИ - ClubBot
+2025-09-17 10:56:21 | INFO     | __main__:main:25 - 🔧 Режим отладки: False
+2025-09-17 10:56:21 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
+2025-09-17 10:56:21 | INFO     | __main__:main:29 - ✅ База данных создана/обновлена
+2025-09-17 10:56:23 | INFO     | app.services.scheduler_service:_setup_jobs:170 - Планировщик задач настроен
+2025-09-17 10:56:24 | INFO     | app.bot.handlers:register_handlers:34 - ✅ Все обработчики зарегистрированы
+2025-09-17 10:56:24 | INFO     | app.bot.bot:_setup_handlers:38 - Обработчики команд настроены
+2025-09-17 10:56:24 | INFO     | __main__:main:38 - 🤖 Бот запущен: @osnovapti_bot
+2025-09-17 10:56:24 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
+2025-09-17 10:56:24 | INFO     | app.bot.bot:start:45 - База данных инициализирована
+2025-09-17 10:56:24 | INFO     | app.services.scheduler_service:start:347 - Планировщик задач запущен
+2025-09-17 10:56:24 | INFO     | app.bot.bot:start:49 - Планировщик задач запущен
+2025-09-17 10:56:24 | INFO     | app.bot.bot:start:52 - Запуск Telegram бота...
+2025-09-17 10:56:24 | INFO     | app.bot.bot:start:57 - Telegram бот успешно запущен

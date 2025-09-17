@@ -244,33 +244,47 @@ class TelegramService:
         return False
     
     async def check_user_subscription(self, user_id: int) -> bool:
-        """Проверка подписки пользователя на канал."""
-        if not settings.CHANNEL_ID:
-            return True  # Если канал не настроен, считаем что подписка есть
-        
+        """Проверка подписки пользователя на канал @osnovaputi согласно ТЗ."""
         try:
-            member = await self.bot.get_chat_member(
-                chat_id=int(settings.CHANNEL_ID),
+            # Проверяем подписку на основной канал @osnovaputi
+            channel_username = "@osnovaputi"
+            
+            # Получаем информацию о пользователе в канале через Bot API
+            chat_member = await self.bot.get_chat_member(
+                chat_id=channel_username,
                 user_id=user_id
             )
-            return member.status in ['member', 'administrator', 'creator']
+            
+            # Проверяем статус: member, administrator, creator = подписан
+            # left, kicked = не подписан
+            is_subscribed = chat_member.status in ['member', 'administrator', 'creator']
+            
+            logger.info(f"Проверка подписки пользователя {user_id} на @osnovaputi: статус '{chat_member.status}', подписан: {is_subscribed}")
+            return is_subscribed
+            
         except TelegramError as e:
-            logger.error(f"Ошибка проверки подписки для {user_id}: {e}")
+            logger.error(f"Ошибка проверки подписки пользователя {user_id} на @osnovaputi: {e}")
+            # В случае ошибки (например, бот не админ канала) считаем, что не подписан
             return False
     
     async def send_subscription_required_message(self, user_id: int) -> bool:
-        """Отправка сообщения о необходимости подписки."""
-        message = f"""
+        """Отправка сообщения о необходимости подписки на @osnovaputi."""
+        message = """
 🔒 <b>Требуется подписка</b>
 
-Для доступа к функциям клуба необходимо подписаться на канал:
-@{settings.CHANNEL_USERNAME}
+Для доступа к клубу «ОСНОВА ПУТИ» необходимо подписаться на основной канал:
+@osnovaputi
 
-После подписки нажми кнопку "Проверить подписку".
+<b>Что вас ждет в канале:</b>
+• Дисциплина. Энергия. Движение
+• Без воды. Без гуру. Без масок  
+• Только ты, реальность и направление
+
+После подписки нажмите "Проверить подписку".
 """
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📢 Подписаться", url=f"https://t.me/{settings.CHANNEL_USERNAME}")],
+            [InlineKeyboardButton("📢 Подписаться", url="https://t.me/osnovaputi")],
             [InlineKeyboardButton("✅ Проверить подписку", callback_data="check_subscription")]
         ])
         

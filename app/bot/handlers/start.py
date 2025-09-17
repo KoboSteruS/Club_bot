@@ -8,7 +8,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from loguru import logger
 
-from app.core.database import get_database
+from app.core.database import get_db_session
 from app.services import UserService, TelegramService
 from app.schemas.user import UserCreate
 
@@ -31,17 +31,31 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
             return
         
         # Получаем сессию базы данных
-        async for session in get_database():
+        async with get_db_session() as session:
             user_service = UserService(session)
             telegram_service = TelegramService(context.bot)
+            
+            # Сначала проверяем подписку на канал @osnovaputi согласно ТЗ
+            is_subscribed = await telegram_service.check_user_subscription(user.id)
+            
+            if not is_subscribed:
+                # Если не подписан - отправляем сообщение о необходимости подписки
+                await telegram_service.send_subscription_required_message(user.id)
+                return
             
             # Проверяем, существует ли пользователь
             existing_user = await user_service.get_user_by_telegram_id(user.id)
             
             if existing_user:
-                logger.info(f"Пользователь {user.id} уже существует")
+                logger.info(f"Пользователь {user.id} уже существует и подписан на @osnovaputi")
                 
-                # Отправляем приветственное сообщение с reply keyboard
+                # Обновляем статус подписки
+                from app.schemas.user import UserUpdate
+                await user_service.update_user(str(existing_user.id), UserUpdate(
+                    is_subscribed_to_channel=True
+                ))
+                
+                # Отправляем приветственное сообщение
                 await telegram_service.send_welcome_message(
                     user_id=user.id,
                     username=user.first_name or user.username or str(user.id)
@@ -56,9 +70,9 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 )
                 
                 new_user = await user_service.create_user(user_data)
-                logger.info(f"Создан новый пользователь: {new_user.id}")
+                logger.info(f"Создан новый пользователь: {new_user.id} (подписан на @osnovaputi)")
                 
-                # Отправляем приветственное сообщение с reply keyboard
+                # Отправляем приветственное сообщение
                 await telegram_service.send_welcome_message(
                     user_id=user.id,
                     username=user.first_name or user.username or str(user.id)
