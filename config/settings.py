@@ -103,6 +103,11 @@ class Settings(BaseSettings):
 settings = Settings()
 
 
+def get_settings() -> Settings:
+    """Получить настройки приложения."""
+    return settings
+
+
 # Настройки для ритуалов ЯДРА
 class RitualSettings:
     """Настройки ритуалов ЯДРА."""
