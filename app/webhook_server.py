@@ -14,7 +14,7 @@ from typing import Dict, Any, Optional
 from aiohttp import web, ClientSession
 from loguru import logger
 
-from app.core.config import get_settings
+from config.settings import get_settings
 from app.bot.handlers.webhook import process_cryptobot_webhook
 
 

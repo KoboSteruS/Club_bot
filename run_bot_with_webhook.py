@@ -16,7 +16,7 @@ from typing import Optional
 # Добавляем корневую директорию в PYTHONPATH
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app.core.config import get_settings
+from config.settings import get_settings
 from app.core.database import init_database
 from app.bot.bot import TelegramBot
 from app.webhook_server import WebhookServer

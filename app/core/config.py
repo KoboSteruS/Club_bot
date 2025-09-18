@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     """Настройки приложения."""
     
     # Telegram Bot
-    telegram_bot_token: str = Field(default="", description="Токен Telegram бота", env="BOT_TOKEN")
+    telegram_bot_token: str = Field(description="Токен Telegram бота", env="BOT_TOKEN")
     telegram_group_id: int = Field(default=-1001234567890, description="ID группы Telegram")
     telegram_channel_id: int = Field(default=-1001234567891, description="ID канала для проверки подписки")
     
