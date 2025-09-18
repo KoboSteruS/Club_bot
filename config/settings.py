@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     
     # Настройки платежей
     PAYMENT_PROVIDER: str = Field(default="cryptobot", env="PAYMENT_PROVIDER")  # cryptobot, freekassa, telegram
-    CRYPTOBOT_TOKEN: str = Field(default="460943:AAu5rpHHNrF2UVVVWIOof9SfeZ2XO1ZpvO3", env="CRYPTOBOT_TOKEN")
+    CRYPTOBOT_TOKEN: str = Field(default="461291:AAsDrsj9ZG7kIw5cNPP3UipePY7L6rSa6Xl", env="CRYPTOBOT_TOKEN")
     BOT_USERNAME: str = Field(default="osnovapti_bot", env="BOT_USERNAME")
     FREKASSA_MERCHANT_ID: str = Field(default="", env="FREKASSA_MERCHANT_ID")
     FREKASSA_SECRET_KEY: str = Field(default="", env="FREKASSA_SECRET_KEY")
