@@ -243,6 +243,37 @@ class TelegramService:
             return await self.send_message(int(settings.GROUP_ID), message)
         return False
     
+    async def send_message(self, user_id: int, message: str, keyboard=None) -> bool:
+        """
+        Отправка сообщения пользователю.
+        
+        Args:
+            user_id: ID пользователя
+            message: Текст сообщения
+            keyboard: Клавиатура (опционально)
+            
+        Returns:
+            bool: True если сообщение отправлено успешно
+        """
+        try:
+            if not self.bot:
+                logger.error("Bot не инициализирован")
+                return False
+                
+            await self.bot.send_message(
+                chat_id=user_id,
+                text=message,
+                parse_mode="Markdown",
+                reply_markup=keyboard
+            )
+            
+            logger.info(f"Сообщение отправлено пользователю {user_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Ошибка отправки сообщения пользователю {user_id}: {e}")
+            return False
+    
     async def check_user_subscription(self, user_id: int) -> bool:
         """Проверка подписки пользователя на канал @osnovaputi согласно ТЗ."""
         try:

@@ -56,3 +56,23 @@
 2025-09-18 14:22:51 | INFO     | app.bot.bot:start:57 - Telegram бот успешно запущен
 2025-09-18 14:23:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
 2025-09-18 14:23:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:24:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:24:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:25:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:25:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:26:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:26:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:27:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:27:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:28:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:28:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:29:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:29:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:30:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:30:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:31:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:31:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:32:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:32:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-18 14:33:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
+2025-09-18 14:33:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах

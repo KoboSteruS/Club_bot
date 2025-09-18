@@ -9,6 +9,9 @@ python-dotenv==1.0.0
 # Планировщик
 APScheduler==3.10.4
 
+# HTTP сервер для webhook'ов
+aiohttp==3.9.1
+
 # Дополнительные зависимости
 asyncio-mqtt==0.16.1
 aiofiles==23.2.1

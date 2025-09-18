@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     PAYMENT_PROVIDER: str = Field(default="cryptobot", env="PAYMENT_PROVIDER")  # cryptobot, freekassa, telegram
     CRYPTOBOT_TOKEN: str = Field(default="461291:AAsDrsj9ZG7kIw5cNPP3UipePY7L6rSa6Xl", env="CRYPTOBOT_TOKEN")
     BOT_USERNAME: str = Field(default="osnovapti_bot", env="BOT_USERNAME")
+    
+    # Настройки Webhook
+    WEBHOOK_HOST: str = Field(default="0.0.0.0", env="WEBHOOK_HOST")
+    WEBHOOK_PORT: int = Field(default=8000, env="WEBHOOK_PORT")
+    WEBHOOK_URL: str = Field(default="", env="WEBHOOK_URL")  # Внешний URL для webhook'ов
     FREKASSA_MERCHANT_ID: str = Field(default="", env="FREKASSA_MERCHANT_ID")
     FREKASSA_SECRET_KEY: str = Field(default="", env="FREKASSA_SECRET_KEY")
     FREKASSA_API_KEY: str = Field(default="", env="FREKASSA_API_KEY")
