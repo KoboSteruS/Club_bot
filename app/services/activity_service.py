@@ -506,4 +506,74 @@ class ActivityService:
         except Exception as e:
             logger.error(f"Ошибка обработки дневных активностей: {e}")
             raise ActivityException(f"Не удалось обработать активности: {e}")
+    
+    async def get_active_users_count_since(self, since: datetime) -> int:
+        """Получение количества активных пользователей с указанной даты."""
+        try:
+            stmt = select(func.count(func.distinct(UserActivity.user_id))).where(
+                UserActivity.created_at >= since
+            )
+            result = await self.session.execute(stmt)
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Ошибка получения количества активных пользователей: {e}")
+            return 0
+    
+    async def get_activity_stats_for_date(self, target_date: date) -> Dict[str, Any]:
+        """Получение статистики активности за дату."""
+        try:
+            # Количество сообщений за дату
+            messages_stmt = select(func.count(ChatActivity.id)).where(
+                func.date(ChatActivity.created_at) == target_date
+            )
+            messages_result = await self.session.execute(messages_stmt)
+            messages_count = messages_result.scalar() or 0
+            
+            # Количество активных пользователей за дату
+            users_stmt = select(func.count(func.distinct(UserActivity.user_id))).where(
+                UserActivity.period_date == target_date
+            )
+            users_result = await self.session.execute(users_stmt)
+            active_users = users_result.scalar() or 0
+            
+            return {
+                'messages': messages_count,
+                'active_users': active_users
+            }
+        except Exception as e:
+            logger.error(f"Ошибка получения статистики активности за {target_date}: {e}")
+            return {'messages': 0, 'active_users': 0}
+    
+    async def get_top_active_users(self, days: int = 7, limit: int = 10) -> List[Dict[str, Any]]:
+        """Получение топ активных пользователей за период."""
+        try:
+            since_date = datetime.utcnow().date() - timedelta(days=days)
+            
+            stmt = (
+                select(
+                    UserActivity.user_id,
+                    User.first_name,
+                    User.username,
+                    func.sum(UserActivity.total_messages).label('activity_count')
+                )
+                .join(User, UserActivity.user_id == User.id)
+                .where(UserActivity.period_date >= since_date)
+                .group_by(UserActivity.user_id, User.first_name, User.username)
+                .order_by(func.sum(UserActivity.total_messages).desc())
+                .limit(limit)
+            )
+            
+            result = await self.session.execute(stmt)
+            return [
+                {
+                    'user_id': row.user_id,
+                    'first_name': row.first_name,
+                    'username': row.username,
+                    'activity_count': row.activity_count
+                }
+                for row in result
+            ]
+        except Exception as e:
+            logger.error(f"Ошибка получения топ активных пользователей: {e}")
+            return []
 

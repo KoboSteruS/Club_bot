@@ -119,6 +119,14 @@ class Payment(BaseModel):
         doc="URL для оплаты"
     )
     
+    # Внешний ID платежа (от платежной системы)
+    external_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=True,
+        index=True,
+        doc="Внешний ID платежа от платежной системы"
+    )
+    
     # Дата оплаты
     paid_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

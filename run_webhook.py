@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from app.webhook_server import run_webhook_server
-from app.core.config import get_settings
+from config.settings import get_settings
 from loguru import logger
 
 

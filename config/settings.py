@@ -21,9 +21,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./club.db", env="DATABASE_URL")
     
     # Настройки канала/группы
-    CHANNEL_ID: str = Field(default="@osnovaputi", env="CHANNEL_ID")
+    CHANNEL_ID: str = Field(default="-1002612093078", env="CHANNEL_ID")  # ID группы "ЯДРО КЛУБА / ОСНОВА PUTИ"
     CHANNEL_USERNAME: str = Field(default="osnovaputi", env="CHANNEL_USERNAME")
-    GROUP_ID: str = Field(default="", env="GROUP_ID")  # ID группы клуба
+    GROUP_ID: str = Field(default="-1002612093078", env="GROUP_ID")  # ID группы клуба
     
     # Настройки админов
     ADMIN_IDS: str = Field(default="1670311707", env="ADMIN_IDS")

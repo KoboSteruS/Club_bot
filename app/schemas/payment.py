@@ -18,6 +18,7 @@ class PaymentBase(BaseModel):
     amount: Decimal = Field(..., description="Сумма платежа")
     currency: str = Field(default="RUB", description="Валюта платежа")
     description: Optional[str] = Field(None, description="Описание платежа")
+    external_id: Optional[str] = Field(None, description="Внешний ID платежа")
     
     @validator("amount")
     def validate_amount(cls, v: Decimal) -> Decimal:

@@ -103,7 +103,7 @@ class PaymentService:
         """
         try:
             result = await self.session.execute(
-                select(Payment).where(Payment.external_payment_id == external_id)
+                select(Payment).where(Payment.external_id == external_id)
             )
             return result.scalar_one_or_none()
         except Exception as e:
@@ -462,3 +462,49 @@ class PaymentService:
         except Exception as e:
             logger.error(f"Ошибка получения последних платежей: {e}")
             return []
+    
+    async def get_total_payments_count(self) -> int:
+        """Получение общего количества платежей."""
+        try:
+            stmt = select(func.count(Payment.id))
+            result = await self.session.execute(stmt)
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Ошибка получения общего количества платежей: {e}")
+            return 0
+    
+    async def get_successful_payments_count(self) -> int:
+        """Получение количества успешных платежей."""
+        try:
+            stmt = select(func.count(Payment.id)).where(Payment.status == PaymentStatus.PAID)
+            result = await self.session.execute(stmt)
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Ошибка получения количества успешных платежей: {e}")
+            return 0
+    
+    async def get_total_payments_amount(self) -> Decimal:
+        """Получение общей суммы платежей."""
+        try:
+            stmt = select(func.sum(Payment.amount)).where(Payment.status == PaymentStatus.PAID)
+            result = await self.session.execute(stmt)
+            return result.scalar() or Decimal('0')
+        except Exception as e:
+            logger.error(f"Ошибка получения общей суммы платежей: {e}")
+            return Decimal('0')
+    
+    async def get_today_payments_amount(self) -> Decimal:
+        """Получение суммы платежей за сегодня."""
+        try:
+            today = datetime.utcnow().date()
+            stmt = select(func.sum(Payment.amount)).where(
+                and_(
+                    Payment.status == PaymentStatus.PAID,
+                    func.date(Payment.paid_at) == today
+                )
+            )
+            result = await self.session.execute(stmt)
+            return result.scalar() or Decimal('0')
+        except Exception as e:
+            logger.error(f"Ошибка получения суммы платежей за сегодня: {e}")
+            return Decimal('0')

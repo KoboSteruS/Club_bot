@@ -211,6 +211,46 @@ class UserService:
             logger.error(f"Ошибка получения последних пользователей: {e}")
             return []
     
+    async def get_total_users_count(self) -> int:
+        """Получение общего количества пользователей."""
+        try:
+            stmt = select(func.count(User.id))
+            result = await self.session.execute(stmt)
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Ошибка получения общего количества пользователей: {e}")
+            return 0
+    
+    async def get_active_users_count(self) -> int:
+        """Получение количества активных пользователей."""
+        try:
+            stmt = select(func.count(User.id)).where(User.status == "active")
+            result = await self.session.execute(stmt)
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Ошибка получения количества активных пользователей: {e}")
+            return 0
+    
+    async def get_premium_users_count(self) -> int:
+        """Получение количества premium пользователей."""
+        try:
+            stmt = select(func.count(User.id)).where(User.is_premium == True)
+            result = await self.session.execute(stmt)
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Ошибка получения количества premium пользователей: {e}")
+            return 0
+    
+    async def get_new_users_count_since(self, since: datetime) -> int:
+        """Получение количества новых пользователей с указанной даты."""
+        try:
+            stmt = select(func.count(User.id)).where(User.created_at >= since)
+            result = await self.session.execute(stmt)
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Ошибка получения количества новых пользователей: {e}")
+            return 0
+    
     async def add_user_to_group(self, user_id: str) -> bool:
         """
         Добавление пользователя в группу.
