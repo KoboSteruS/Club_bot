@@ -6,7 +6,7 @@
 
 from typing import Optional, List
 from datetime import datetime
-from uuid import UUID
+# UUID больше не используется, ID теперь строка
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, func, delete, or_
 from sqlalchemy.orm import selectinload
@@ -68,9 +68,10 @@ class UserService:
         """
         try:
             # Конвертируем строку в UUID для SQL запроса
-            uuid_obj = UUID(user_id) if isinstance(user_id, str) else user_id
+            # ID теперь всегда строка
+            user_id_str = str(user_id) if not isinstance(user_id, str) else user_id
             result = await self.session.execute(
-                select(User).where(User.id == uuid_obj)
+                select(User).where(User.id == user_id_str)
             )
             return result.scalar_one_or_none()
         except Exception as e:
@@ -427,9 +428,10 @@ class UserService:
         """Удалить пользователя."""
         try:
             # Конвертируем строку в UUID для SQL запроса
-            uuid_obj = UUID(user_id) if isinstance(user_id, str) else user_id
+            # ID теперь всегда строка
+            user_id_str = str(user_id) if not isinstance(user_id, str) else user_id
             result = await self.session.execute(
-                delete(User).where(User.id == uuid_obj)
+                delete(User).where(User.id == user_id_str)
             )
             await self.session.commit()
             return result.rowcount > 0

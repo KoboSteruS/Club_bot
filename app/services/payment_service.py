@@ -8,7 +8,7 @@ import hashlib
 import json
 from datetime import datetime
 from typing import Optional, Dict, Any, List
-from uuid import UUID
+# UUID больше не используется, ID теперь строка
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, func
@@ -321,9 +321,10 @@ class PaymentService:
         """
         try:
             # Конвертируем строку обратно в UUID для запроса
-            uuid_obj = UUID(user_id) if isinstance(user_id, str) else user_id
+            # ID теперь всегда строка
+            user_id_str = str(user_id) if not isinstance(user_id, str) else user_id
             result = await self.session.execute(
-                select(User).where(User.id == uuid_obj)
+                select(User).where(User.id == user_id_str)
             )
             return result.scalar_one_or_none()
         except Exception as e:
