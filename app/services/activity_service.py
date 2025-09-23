@@ -510,8 +510,12 @@ class ActivityService:
     async def get_active_users_count_since(self, since: datetime) -> int:
         """Получение количества активных пользователей с указанной даты."""
         try:
-            stmt = select(func.count(func.distinct(UserActivity.user_id))).where(
-                UserActivity.created_at >= since
+            # Считаем пользователей, которые присоединились к группе с указанной даты
+            stmt = select(func.count(User.id)).where(
+                and_(
+                    User.is_in_group == True,
+                    User.joined_group_at >= since
+                )
             )
             result = await self.session.execute(stmt)
             return result.scalar() or 0

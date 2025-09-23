@@ -11,7 +11,6 @@ from .payment import payment_handler
 from .reports import report_handler
 from .rituals import ritual_handler
 from .goals import goal_handler
-from .admin_simple import admin_handler
 from .admin_dashboard import (
     admin_dashboard_handler,
     admin_users_handler,
@@ -37,7 +36,6 @@ def register_handlers(application: Application) -> None:
         application.add_handler(CallbackQueryHandler(report_handler, pattern="^report"))
         application.add_handler(CallbackQueryHandler(ritual_handler, pattern="^ritual"))
         application.add_handler(CallbackQueryHandler(goal_handler, pattern="^goal"))
-        application.add_handler(CallbackQueryHandler(admin_handler, pattern="^admin"))
         
         # Админ-панель callback queries
         application.add_handler(CallbackQueryHandler(admin_dashboard_handler, pattern="^admin_dashboard"))

@@ -94,6 +94,14 @@ class User(BaseModel):
         doc="Дата окончания подписки"
     )
     
+    # Premium статус пользователя
+    is_premium: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+        doc="Является ли пользователь premium"
+    )
+    
     # Подписан ли на канал
     is_subscribed_to_channel: Mapped[bool] = mapped_column(
         Boolean,
