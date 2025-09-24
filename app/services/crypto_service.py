@@ -86,7 +86,7 @@ class CryptoService:
     
     async def get_invoice(self, invoice_id: str) -> Optional[Dict[str, Any]]:
         """
-        Получение информации о счете.
+        Получение информации о счете через getInvoices API.
         
         Args:
             invoice_id: ID счета
@@ -105,14 +105,21 @@ class CryptoService:
             
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"{self.api_url}/getInvoice",
-                    params={"invoice_id": invoice_id},
+                    f"{self.api_url}/getInvoices",
+                    params={"invoice_ids": invoice_id},  # Используем invoice_ids (множественное число)
                     headers=headers
                 ) as response:
                     if response.status == 200:
                         data = await response.json()
                         if data.get("ok"):
-                            return data.get("result")
+                            # getInvoices возвращает массив, берем первый элемент
+                            result = data.get("result", {})
+                            items = result.get("items", [])
+                            if items:
+                                return items[0]  # Возвращаем первый (и единственный) счет
+                            else:
+                                logger.warning(f"Счет {invoice_id} не найден")
+                                return None
                         else:
                             logger.error(f"Ошибка CryptoBot API: {data.get('error')}")
                     else:

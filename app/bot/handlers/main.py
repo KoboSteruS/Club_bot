@@ -465,11 +465,20 @@ async def handle_payment_check(update: Update, context: ContextTypes.DEFAULT_TYP
                 [InlineKeyboardButton("📞 Поддержка", url="https://t.me/support")]
             ])
         
-        await query.edit_message_text(
-            message,
-            reply_markup=keyboard,
-            parse_mode='HTML'
-        )
+        # Проверяем, изменилось ли содержимое сообщения
+        current_text = query.message.text or ""
+        current_markup = str(query.message.reply_markup) if query.message.reply_markup else ""
+        new_markup_str = str(keyboard)
+        
+        if current_text != message or current_markup != new_markup_str:
+            await query.edit_message_text(
+                message,
+                reply_markup=keyboard,
+                parse_mode='HTML'
+            )
+        else:
+            # Содержимое не изменилось
+            await query.answer("Статус платежа не изменился")
         
     except Exception as e:
         logger.error(f"Ошибка в handle_payment_check: {e}")
