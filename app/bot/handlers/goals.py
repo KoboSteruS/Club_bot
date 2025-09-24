@@ -14,8 +14,10 @@ from app.services.user_service import UserService
 from app.services.goal_service import GoalService
 from app.services.activity_service import ActivityService, ActivityType
 from app.schemas.goal import GoalCreate
+from app.bot.decorators import require_payment
 
 
+@require_payment
 async def goal_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Обработчик callback'ов для целей.

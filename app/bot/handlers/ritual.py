@@ -17,8 +17,10 @@ from app.core.database import get_database
 from app.services import UserService, RitualService, TelegramService
 from app.models.ritual import ResponseType, RitualType
 from app.schemas.ritual import RitualResponseCreate
+from app.bot.decorators import require_payment
 
 
+@require_payment
 async def handle_ritual_button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Обработчик нажатий на кнопки в ритуалах.

@@ -4,6 +4,7 @@
 Содержит методы для отправки сообщений, работы с группами и каналами.
 """
 
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 from telegram import Bot, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.error import TelegramError
@@ -75,6 +76,58 @@ class TelegramService:
             [InlineKeyboardButton("✅ Проверить подписку", callback_data="check_subscription")],
             [InlineKeyboardButton("💳 Оплатить доступ", callback_data="payment_options")],
             [InlineKeyboardButton("📘 Узнать о клубе", callback_data="about_club")]
+        ])
+        
+        return await self.send_message(user_id, message, keyboard)
+    
+    async def send_subscription_active_message(self, user_id: int, username: str, subscription_until: datetime) -> bool:
+        """Отправка сообщения для пользователей с активной подпиской."""
+        message = f"""
+🔥 <b>Добро пожаловать обратно в клуб «ОСНОВА ПУТИ»!</b>
+
+Привет, {username}! 👋
+
+✅ <b>У тебя есть активная подписка до {subscription_until.strftime('%d.%m.%Y')}</b>
+
+<b>Что доступно:</b>
+🧘 Ежедневные ритуалы ЯДРА
+📝 Система отчетности (21:00)
+🎯 Еженедельные цели
+💬 Доступ к закрытой группе
+📊 Анализ активности
+
+Продолжаем работу над собой! 💪
+"""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🧘 Ритуалы", callback_data="rituals")],
+            [InlineKeyboardButton("📝 Отчеты", callback_data="reports")],
+            [InlineKeyboardButton("🎯 Цели", callback_data="goals")],
+            [InlineKeyboardButton("💬 Группа клуба", url="https://t.me/+hWoFGCMcaI83YTY0")]
+        ])
+        
+        return await self.send_message(user_id, message, keyboard)
+    
+    async def send_payment_required_message(self, user_id: int) -> bool:
+        """Отправка сообщения о необходимости оплаты."""
+        message = """
+💳 <b>Требуется оплата участия</b>
+
+У тебя нет активной подписки на клуб.
+
+<b>Что даст оплаченное участие:</b>
+🧘 Ежедневные ритуалы ЯДРА
+📝 Система отчетности (21:00)
+🎯 Еженедельные цели
+💬 Доступ к закрытой группе
+📊 Анализ активности
+
+Готов оплатить доступ?
+"""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("💳 Оплатить участие", callback_data="payment_options")],
+            [InlineKeyboardButton("ℹ️ О клубе", callback_data="about_club")]
         ])
         
         return await self.send_message(user_id, message, keyboard)

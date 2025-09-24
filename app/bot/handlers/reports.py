@@ -12,8 +12,10 @@ from ...services.report_service import ReportService
 from ...services.activity_service import ActivityService, ActivityType
 from ...models.report import ReportStatus
 from ..keyboards.main import get_reports_keyboard
+from app.bot.decorators import require_payment
 
 
+@require_payment
 async def report_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обработчик отчетов."""
     try:

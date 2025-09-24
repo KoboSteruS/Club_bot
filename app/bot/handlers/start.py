@@ -4,6 +4,7 @@
 Обрабатывает команду /start и создает нового пользователя.
 """
 
+from datetime import datetime
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from loguru import logger
@@ -55,11 +56,20 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
                     is_subscribed_to_channel=True
                 ))
                 
-                # Отправляем приветственное сообщение
-                await telegram_service.send_welcome_message(
-                    user_id=user.id,
-                    username=user.first_name or user.username or str(user.id)
-                )
+                # Проверяем, есть ли активная подписка
+                if existing_user.subscription_until and existing_user.subscription_until > datetime.now():
+                    # У пользователя есть активная подписка
+                    await telegram_service.send_subscription_active_message(
+                        user_id=user.id,
+                        username=user.first_name or user.username or str(user.id),
+                        subscription_until=existing_user.subscription_until
+                    )
+                else:
+                    # У пользователя нет активной подписки
+                    await telegram_service.send_welcome_message(
+                        user_id=user.id,
+                        username=user.first_name or user.username or str(user.id)
+                    )
             else:
                 # Создаем нового пользователя
                 user_data = UserCreate(
