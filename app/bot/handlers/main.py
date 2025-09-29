@@ -10,6 +10,29 @@ from telegram.ext import ContextTypes
 from loguru import logger
 
 from app.core.database import get_db_session
+
+
+async def safe_answer_callback(query, text: str = None) -> bool:
+    """
+    Безопасный ответ на callback query с обработкой устаревших запросов.
+    
+    Args:
+        query: Callback query объект
+        text: Текст для ответа (опционально)
+        
+    Returns:
+        bool: True если ответ отправлен успешно
+    """
+    try:
+        await query.answer(text=text)
+        return True
+    except Exception as e:
+        if "Query is too old" in str(e) or "query id is invalid" in str(e):
+            logger.warning(f"Устаревший callback query: {e}")
+            return False
+        else:
+            logger.error(f"Ошибка ответа на callback query: {e}")
+            return False
 from app.services.user_service import UserService
 from app.services.telegram_service import TelegramService
 import sys
@@ -31,7 +54,10 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         if not query:
             return
             
-        await query.answer()
+        # Безопасный ответ на callback query
+        if not await safe_answer_callback(query):
+            logger.warning("Пропускаем обработку устаревшего callback query")
+            return
         
         user = update.effective_user
         if not user:
@@ -58,8 +84,8 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             
     except Exception as e:
         logger.error(f"Ошибка в main_handler: {e}")
-        if update.callback_query:
-            await update.callback_query.answer("❌ Произошла ошибка")
+        # Не пытаемся отвечать на callback query в блоке except,
+        # так как он уже может быть устаревшим
 
 
 async def handle_subscription_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

@@ -15,6 +15,29 @@ from app.services.telegram_service import TelegramService
 from config.settings import get_settings
 
 
+async def safe_answer_callback(query, text: str = None) -> bool:
+    """
+    Безопасный ответ на callback query с обработкой устаревших запросов.
+    
+    Args:
+        query: Callback query объект
+        text: Текст для ответа (опционально)
+        
+    Returns:
+        bool: True если ответ отправлен успешно
+    """
+    try:
+        await query.answer(text=text)
+        return True
+    except Exception as e:
+        if "Query is too old" in str(e) or "query id is invalid" in str(e):
+            logger.warning(f"Устаревший callback query: {e}")
+            return False
+        else:
+            logger.error(f"Ошибка ответа на callback query: {e}")
+            return False
+
+
 async def admin_dashboard_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обработчик команды /admin - админ-панель."""
     try:
@@ -100,7 +123,7 @@ async def admin_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Обработчик кнопки 'Пользователи' в админ-панели."""
     try:
         query = update.callback_query
-        await query.answer()
+        await safe_answer_callback(query)
         
         settings = get_settings()
         user_id = query.from_user.id
@@ -174,7 +197,7 @@ async def admin_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
             except Exception as edit_error:
                 if "Message is not modified" in str(edit_error):
                     # Сообщение не изменилось, просто отвечаем на callback
-                    await query.answer("📋 Данные актуальны")
+                    await safe_answer_callback(query, "📋 Данные актуальны")
                 else:
                     # Другая ошибка - пересылаем
                     raise edit_error
@@ -188,7 +211,7 @@ async def admin_access_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     """Обработчик кнопки 'Выдача доступа' в админ-панели."""
     try:
         query = update.callback_query
-        await query.answer()
+        await safe_answer_callback(query)
         
         settings = get_settings()
         user_id = query.from_user.id
@@ -247,7 +270,7 @@ async def admin_give_access_all_handler(update: Update, context: ContextTypes.DE
     """Обработчик выдачи доступа всем пользователям."""
     try:
         query = update.callback_query
-        await query.answer("⏳ Выдаем доступ всем пользователям...")
+        await safe_answer_callback(query, "⏳ Выдаем доступ всем пользователям...")
         
         settings = get_settings()
         user_id = query.from_user.id
@@ -309,7 +332,7 @@ async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_T
     """Обработчик кнопки 'Активность' в админ-панели."""
     try:
         query = update.callback_query
-        await query.answer()
+        await safe_answer_callback(query)
         
         settings = get_settings()
         user_id = query.from_user.id
@@ -362,7 +385,7 @@ async def admin_refresh_handler(update: Update, context: ContextTypes.DEFAULT_TY
     """Обработчик кнопки 'Обновить' в админ-панели."""
     try:
         query = update.callback_query
-        await query.answer("🔄 Обновляем данные...")
+        await safe_answer_callback(query, "🔄 Обновляем данные...")
         
         # Перенаправляем на главную панель
         await admin_dashboard_handler(update, context)
@@ -376,7 +399,7 @@ async def admin_broadcast_handler(update: Update, context: ContextTypes.DEFAULT_
     """Обработчик кнопки 'Рассылка' в админ-панели."""
     try:
         query = update.callback_query
-        await query.answer()
+        await safe_answer_callback(query)
         
         settings = get_settings()
         user_id = query.from_user.id
