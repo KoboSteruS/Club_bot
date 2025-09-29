@@ -413,7 +413,7 @@ class TelegramService:
             return False
     
     async def check_user_subscription(self, user_id: int) -> bool:
-        """Проверка подписки пользователя на канал @osnovaputi согласно ТЗ."""
+        """Проверка подписки пользователя на группу "ЯДРО КЛУБА / ОСНОВА PUTИ" согласно ТЗ."""
         try:
             # Проверяем кэш
             import time

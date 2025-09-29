@@ -36,14 +36,14 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
             user_service = UserService(session)
             telegram_service = TelegramService(context.bot)
             
-            # Сначала проверяем подписку на канал @osnovaputi согласно ТЗ
+            # Сначала проверяем подписку на группу "ЯДРО КЛУБА / ОСНОВА PUTИ" согласно ТЗ
             is_subscribed = await telegram_service.check_user_subscription(user.id)
             
             if not is_subscribed:
                 # Если не подписан - отправляем сообщение о необходимости подписки
                 # Используем reply_text вместо send_message для ответа на команду
                 subscription_message = """
-❌ Для доступа к боту необходимо подписаться на канал @osnovaputi
+❌ Для доступа к боту необходимо подписаться на группу "ЯДРО КЛУБА / ОСНОВА PUTИ"
 
 После подписки нажмите /start еще раз.
 """
@@ -54,9 +54,9 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
             existing_user = await user_service.get_user_by_telegram_id(user.id)
             
             if existing_user:
-                logger.info(f"Пользователь {user.id} уже существует и подписан на @osnovaputi")
+                logger.info(f"Пользователь {user.id} уже существует и подписан на группу")
                 
-                # Обновляем статус подписки на канал
+                # Обновляем статус подписки на группу
                 from app.schemas.user import UserUpdate
                 await user_service.update_user(str(existing_user.id), UserUpdate(
                     is_subscribed_to_channel=True
