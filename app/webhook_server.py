@@ -94,23 +94,39 @@ class WebhookServer:
             web.Response: HTTP ответ
         """
         try:
+            # Логируем входящий запрос
+            logger.info(f"Получен webhook запрос от {request.remote}")
+            logger.info(f"Заголовки: {dict(request.headers)}")
+            
             # Читаем тело запроса
             body = await request.read()
+            logger.info(f"Размер тела запроса: {len(body)} байт")
             
-            # Получаем подпись из заголовков
-            signature = request.headers.get('crypto-pay-api-signature', '')
+            # Получаем подпись из заголовков (CryptoBot может использовать разные заголовки)
+            signature = (
+                request.headers.get('crypto-pay-api-signature', '') or
+                request.headers.get('X-Crypto-Pay-API-Signature', '') or
+                request.headers.get('X-Signature', '') or
+                request.headers.get('Signature', '')
+            )
+            
+            logger.info(f"Найдена подпись: {signature[:20] if signature else 'Нет'}...")
             
             # Проверяем подпись (в production обязательно!)
-            if not self._verify_cryptobot_signature(body, signature):
+            if signature and not self._verify_cryptobot_signature(body, signature):
                 logger.warning("Неверная подпись webhook CryptoBot")
                 # В тестовом режиме пропускаем проверку подписи
                 # return web.Response(status=401, text="Invalid signature")
+            elif not signature:
+                logger.info("Подпись не найдена в заголовках, пропускаем проверку (тестовый режим)")
                 
             # Парсим JSON
             try:
                 webhook_data = json.loads(body.decode('utf-8'))
+                logger.info(f"Парсинг JSON успешен: {webhook_data}")
             except json.JSONDecodeError as e:
                 logger.error(f"Ошибка парсинга JSON webhook CryptoBot: {e}")
+                logger.error(f"Тело запроса: {body.decode('utf-8', errors='ignore')}")
                 return web.Response(status=400, text="Invalid JSON")
                 
             logger.info(f"Получен webhook CryptoBot: {webhook_data.get('update_type')}")
@@ -127,6 +143,8 @@ class WebhookServer:
                 
         except Exception as e:
             logger.error(f"Ошибка в handle_cryptobot_webhook: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return web.Response(status=500, text="Internal server error")
             
     async def start(self) -> None:

@@ -55,6 +55,10 @@ class UserUpdate(BaseModel):
     status: Optional[UserStatus] = Field(None, description="Статус пользователя")
     is_in_group: Optional[bool] = Field(None, description="Добавлен ли в группу")
     additional_info: Optional[str] = Field(None, description="Дополнительная информация")
+    subscription_until: Optional[datetime] = Field(None, description="Дата окончания подписки")
+    is_premium: Optional[bool] = Field(None, description="Является ли пользователь premium")
+    is_subscribed_to_channel: Optional[bool] = Field(None, description="Подписан ли на основной канал")
+    joined_group_at: Optional[datetime] = Field(None, description="Дата добавления в группу")
     
     @validator("username")
     def validate_username(cls, v: Optional[str]) -> Optional[str]:

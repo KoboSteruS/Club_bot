@@ -7,11 +7,11 @@ from telegram.ext import ContextTypes
 from loguru import logger
 from datetime import date
 
-from ...services.user_service import UserService
-from ...services.report_service import ReportService
-from ...services.activity_service import ActivityService, ActivityType
-from ...models.report import ReportStatus
-from ..keyboards.main import get_reports_keyboard
+from app.services.user_service import UserService
+from app.services.report_service import ReportService
+from app.services.activity_service import ActivityService, ActivityType
+from app.models.report import ReportStatus
+from app.bot.keyboards.main import get_reports_keyboard
 from app.bot.decorators import require_payment
 
 

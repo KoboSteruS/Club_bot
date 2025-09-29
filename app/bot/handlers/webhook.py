@@ -57,7 +57,7 @@ async def process_cryptobot_webhook(webhook_data: Dict[str, Any]) -> bool:
                     
                     # Активируем подписку пользователя
                     # payment.user_id содержит UUID пользователя, получаем пользователя по UUID
-                    db_user = await user_service.get_user(payment.user_id)
+                    db_user = await user_service.get_user_by_id(payment.user_id)
                     if db_user:
                         from datetime import datetime, timedelta
                         from app.schemas.user import UserUpdate
@@ -79,20 +79,26 @@ async def process_cryptobot_webhook(webhook_data: Dict[str, Any]) -> bool:
                         # Отправляем уведомление пользователю о успешной оплате
                         try:
                             from app.services.telegram_service import TelegramService
-                            telegram_service = TelegramService()
+                            from config.settings import get_settings
+                            
+                            # Создаем бота для отправки уведомления
+                            settings = get_settings()
+                            from telegram import Bot
+                            bot = Bot(token=settings.BOT_TOKEN)
+                            telegram_service = TelegramService(bot)
                             
                             # Отправляем сообщение об успешной активации
                             success_message = (
-                                f"🎉 **Поздравляем!**\n\n"
+                                f"🎉 Поздравляем!\n\n"
                                 f"✅ Ваша подписка успешно активирована!\n"
                                 f"📅 Действует до: {subscription_end.strftime('%d.%m.%Y')}\n"
                                 f"💎 Тариф: {tariff_type}\n\n"
-                                f"Добро пожаловать в клуб **ОСНОВА ПУТИ**! 🚀"
+                                f"Добро пожаловать в клуб ОСНОВА ПУТИ! 🚀"
                             )
                             
                             await telegram_service.send_message(
-                                user_id=db_user.telegram_id,
-                                message=success_message
+                                chat_id=db_user.telegram_id,
+                                text=success_message
                             )
                             
                             logger.info(f"Отправлено уведомление об активации подписки пользователю {db_user.telegram_id}")

@@ -13,7 +13,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 from loguru import logger
 
-from app.core.database import get_database
+from app.core.database import get_db_session
 from app.services import UserService, RitualService, TelegramService
 from app.models.ritual import ResponseType, RitualType
 from app.schemas.ritual import RitualResponseCreate
@@ -47,7 +47,7 @@ async def handle_ritual_button_callback(update: Update, context: ContextTypes.DE
         user = query.from_user
         logger.info(f"Обработка ответа на ритуал от пользователя {user.id}: {button_type}")
         
-        async for session in get_database():
+        async with get_db_session() as session:
             user_service = UserService(session)
             ritual_service = RitualService(session)
             
@@ -119,7 +119,7 @@ async def handle_evening_report_text(update: Update, context: ContextTypes.DEFAU
     try:
         logger.info(f"Получен текстовый отчёт от пользователя {user.id}")
         
-        async for session in get_database():
+        async with get_db_session() as session:
             user_service = UserService(session)
             ritual_service = RitualService(session)
             
@@ -198,6 +198,78 @@ def _get_response_confirmation(button_type: str, user_name: Optional[str] = None
     }
     
     return confirmations.get(button_type, f"✅ <b>Ответ принят, {name}!</b>\n\nСпасибо за участие в ритуале! 🙏")
+
+
+async def ritual_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    Основной обработчик для ритуалов.
+    Обрабатывает callback'и типа 'ritual_*'
+    """
+    try:
+        query = update.callback_query
+        if not query:
+            return
+            
+        await query.answer()
+        
+        # Извлекаем данные из callback_data
+        callback_data = query.data
+        
+        if callback_data.startswith("ritual_"):
+            # Обрабатываем как кнопку ритуала
+            await handle_ritual_button_callback(update, context)
+        elif callback_data == "rituals":
+            # Показываем меню ритуалов
+            await handle_rituals_menu(update, context)
+        else:
+            logger.warning(f"Неизвестный callback_data в ritual_handler: {callback_data}")
+            
+    except Exception as e:
+        logger.error(f"Ошибка в ritual_handler: {e}")
+        if query:
+            await query.answer("❌ Произошла ошибка при обработке ритуала")
+
+
+async def handle_rituals_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка меню ритуалов."""
+    try:
+        query = update.callback_query
+        await query.answer()
+        
+        message = """
+🧘 <b>Ритуалы ЯДРА</b>
+
+Ежедневные ритуалы для развития дисциплины и энергии:
+
+<b>Утренний ритуал (6:30)</b>
+• Пробуждение и настройка на день
+• Физические упражнения
+• Медитация и планирование
+
+<b>Вечерний ритуал (21:00)</b>
+• Анализ прошедшего дня
+• Подготовка к следующему дню
+• Расслабление и восстановление
+
+Выбери действие:
+"""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📅 Расписание ритуалов", callback_data="ritual_schedule")],
+            [InlineKeyboardButton("📊 Моя статистика", callback_data="ritual_stats")],
+            [InlineKeyboardButton("⚙️ Настройки", callback_data="ritual_settings")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_start")]
+        ])
+        
+        await query.edit_message_text(
+            text=message,
+            reply_markup=keyboard,
+            parse_mode='HTML'
+        )
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_rituals_menu: {e}")
+        await query.answer("❌ Произошла ошибка")
 
 
 # Создаём обработчики

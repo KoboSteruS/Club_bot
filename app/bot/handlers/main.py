@@ -4,6 +4,7 @@
 Обрабатывает основные callback'ы: проверка подписки, оплата, информация о клубе.
 """
 
+from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from loguru import logger
@@ -198,7 +199,19 @@ async def handle_about_club(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         user = update.effective_user
         telegram_service = TelegramService(context.bot)
         
-        await telegram_service.send_about_club_message(user.id)
+        # Проверяем, есть ли у пользователя активная подписка
+        async with get_db_session() as session:
+            from app.services.user_service import UserService
+            user_service = UserService(session)
+            
+            db_user = await user_service.get_user_by_telegram_id(user.id)
+            
+            if db_user and db_user.is_premium and db_user.subscription_until and db_user.subscription_until > datetime.now():
+                # У пользователя есть активная подписка
+                await telegram_service.send_about_club_message_for_subscribers(user.id)
+            else:
+                # У пользователя нет активной подписки
+                await telegram_service.send_about_club_message(user.id)
         
     except Exception as e:
         logger.error(f"Ошибка в handle_about_club: {e}")
@@ -211,8 +224,21 @@ async def handle_back_to_start(update: Update, context: ContextTypes.DEFAULT_TYP
         user = update.effective_user
         telegram_service = TelegramService(context.bot)
         
-        username = user.first_name or user.username or str(user.id)
-        await telegram_service.send_welcome_message(user.id, username)
+        # Проверяем статус подписки пользователя
+        async with get_db_session() as session:
+            from app.services.user_service import UserService
+            user_service = UserService(session)
+            
+            db_user = await user_service.get_user_by_telegram_id(user.id)
+            
+            if db_user and db_user.is_premium and db_user.subscription_until and db_user.subscription_until > datetime.now():
+                # У пользователя есть активная подписка - показываем соответствующее сообщение
+                username = user.first_name or user.username or str(user.id)
+                await telegram_service.send_subscription_active_message(user.id, username, db_user.subscription_until)
+            else:
+                # У пользователя нет активной подписки - показываем приветственное сообщение
+                username = user.first_name or user.username or str(user.id)
+                await telegram_service.send_welcome_message(user.id, username)
         
     except Exception as e:
         logger.error(f"Ошибка в handle_back_to_start: {e}")
@@ -401,19 +427,20 @@ async def handle_payment_check(update: Update, context: ContextTypes.DEFAULT_TYP
 Поздравляем! Ты успешно присоединился к клубу «ОСНОВА ПУТИ».
 
 <b>Что дальше:</b>
-🧘 Ежедневные ритуалы ЯДРА в 6:30 и 21:00
-📝 Отчеты о дне в 21:00
-🎯 Еженедельные цели в воскресенье
+📝 Ежедневные отчеты (21:00)
+🎯 Еженедельные цели (воскресенье)
 💬 Доступ к закрытой группе
-📊 Анализ твоей активности
+📊 Анализ активности
+
+Все функции работают автоматически. Следи за уведомлениями!
 
 <b>Добро пожаловать в ЯДРО!</b>
 Начинаем трансформацию уже сегодня 💪
 """
                 
                 keyboard = InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🚀 Начать путь", callback_data="start_journey")],
-                    [InlineKeyboardButton("💬 Группа клуба", url="https://t.me/+hWoFGCMcaI83YTY0")]
+                    [InlineKeyboardButton("💬 Группа клуба", url="https://t.me/+hWoFGCMcaI83YTY0")],
+                    [InlineKeyboardButton("ℹ️ О клубе", callback_data="about_club")]
                 ])
                 
             elif status == "active":
@@ -483,3 +510,5 @@ async def handle_payment_check(update: Update, context: ContextTypes.DEFAULT_TYP
     except Exception as e:
         logger.error(f"Ошибка в handle_payment_check: {e}")
         await update.callback_query.answer("❌ Произошла ошибка при проверке платежа")
+
+

@@ -41,7 +41,13 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
             
             if not is_subscribed:
                 # Если не подписан - отправляем сообщение о необходимости подписки
-                await telegram_service.send_subscription_required_message(user.id)
+                # Используем reply_text вместо send_message для ответа на команду
+                subscription_message = """
+❌ Для доступа к боту необходимо подписаться на канал @osnovaputi
+
+После подписки нажмите /start еще раз.
+"""
+                await update.message.reply_text(subscription_message)
                 return
             
             # Проверяем, существует ли пользователь
@@ -50,25 +56,26 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
             if existing_user:
                 logger.info(f"Пользователь {user.id} уже существует и подписан на @osnovaputi")
                 
-                # Обновляем статус подписки
+                # Обновляем статус подписки на канал
                 from app.schemas.user import UserUpdate
                 await user_service.update_user(str(existing_user.id), UserUpdate(
                     is_subscribed_to_channel=True
                 ))
                 
-                # Проверяем, есть ли активная подписка
+                # Проверяем, есть ли активная подписка (оплата)
                 if existing_user.subscription_until and existing_user.subscription_until > datetime.now():
-                    # У пользователя есть активная подписка
+                    # У пользователя есть активная подписка - отправляем сообщение о доступе
                     await telegram_service.send_subscription_active_message(
                         user_id=user.id,
                         username=user.first_name or user.username or str(user.id),
-                        subscription_until=existing_user.subscription_until
+                        subscription_until=existing_user.subscription_until,
+                        reply_to_message=update.message  # Передаем сообщение для reply
                     )
                 else:
-                    # У пользователя нет активной подписки
-                    await telegram_service.send_welcome_message(
+                    # У пользователя нет активной подписки - отправляем сообщение о необходимости оплаты
+                    await telegram_service.send_payment_required_message(
                         user_id=user.id,
-                        username=user.first_name or user.username or str(user.id)
+                        reply_to_message=update.message  # Передаем сообщение для reply
                     )
             else:
                 # Создаем нового пользователя
@@ -82,10 +89,10 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 new_user = await user_service.create_user(user_data)
                 logger.info(f"Создан новый пользователь: {new_user.id} (подписан на @osnovaputi)")
                 
-                # Отправляем приветственное сообщение
-                await telegram_service.send_welcome_message(
+                # Отправляем сообщение о необходимости оплаты
+                await telegram_service.send_payment_required_message(
                     user_id=user.id,
-                    username=user.first_name or user.username or str(user.id)
+                    reply_to_message=update.message  # Передаем сообщение для reply
                 )
         
     except Exception as e:

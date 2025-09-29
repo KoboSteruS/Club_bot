@@ -14,7 +14,8 @@ from .goals import goal_handler
 from .admin_dashboard import (
     admin_dashboard_handler,
     admin_users_handler,
-    admin_payments_handler,
+    admin_access_handler,
+    admin_give_access_all_handler,
     admin_activity_handler,
     admin_refresh_handler,
     admin_broadcast_handler
@@ -34,13 +35,14 @@ def register_handlers(application: Application) -> None:
         application.add_handler(CallbackQueryHandler(main_handler, pattern="^(check_subscription|payment_options|about_club|back_to_start|subscription_confirmed|pay_|check_payment_)"))
         application.add_handler(CallbackQueryHandler(payment_handler, pattern="^payment"))
         application.add_handler(CallbackQueryHandler(report_handler, pattern="^report"))
-        application.add_handler(CallbackQueryHandler(ritual_handler, pattern="^ritual"))
+        application.add_handler(CallbackQueryHandler(ritual_handler, pattern="^ritual_[^s]"))
         application.add_handler(CallbackQueryHandler(goal_handler, pattern="^goal"))
         
         # Админ-панель callback queries
         application.add_handler(CallbackQueryHandler(admin_dashboard_handler, pattern="^admin_dashboard"))
         application.add_handler(CallbackQueryHandler(admin_users_handler, pattern="^admin_users"))
-        application.add_handler(CallbackQueryHandler(admin_payments_handler, pattern="^admin_payments"))
+        application.add_handler(CallbackQueryHandler(admin_access_handler, pattern="^admin_access"))
+        application.add_handler(CallbackQueryHandler(admin_give_access_all_handler, pattern="^admin_give_access_all"))
         application.add_handler(CallbackQueryHandler(admin_activity_handler, pattern="^admin_activity"))
         application.add_handler(CallbackQueryHandler(admin_refresh_handler, pattern="^admin_refresh"))
         application.add_handler(CallbackQueryHandler(admin_broadcast_handler, pattern="^admin_broadcast"))

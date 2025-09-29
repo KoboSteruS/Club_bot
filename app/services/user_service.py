@@ -194,22 +194,41 @@ class UserService:
             logger.error(f"Ошибка получения количества активных пользователей: {e}")
             return 0
 
-    async def get_recent_users(self, limit: int = 10) -> List[User]:
+    async def get_recent_users(self, limit: int = 10, offset: int = 0) -> List[User]:
         """
         Получить список последних пользователей.
         
         Args:
             limit: Максимальное количество пользователей
+            offset: Смещение для пагинации
             
         Returns:
             List[User]: Список последних пользователей
         """
         try:
-            stmt = select(User).order_by(User.created_at.desc()).limit(limit)
+            stmt = select(User).order_by(User.created_at.desc()).limit(limit).offset(offset)
             result = await self.session.execute(stmt)
             return result.scalars().all()
         except Exception as e:
             logger.error(f"Ошибка получения последних пользователей: {e}")
+            return []
+    
+    async def get_users_by_status(self, status: str) -> List[User]:
+        """
+        Получить пользователей по статусу.
+        
+        Args:
+            status: Статус пользователей
+            
+        Returns:
+            List[User]: Список пользователей с указанным статусом
+        """
+        try:
+            stmt = select(User).where(User.status == status).order_by(User.created_at.desc())
+            result = await self.session.execute(stmt)
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Ошибка получения пользователей по статусу {status}: {e}")
             return []
     
     async def get_total_users_count(self) -> int:
