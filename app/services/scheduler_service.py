@@ -766,7 +766,6 @@ class SchedulerService:
                     try:
                         # Отправляем отчет в группу
                         success = await telegram_service.send_message_to_group(
-                            settings.telegram_group_id,
                             report.report_message
                         )
                         

@@ -376,9 +376,44 @@ class TelegramService:
     
     async def send_message_to_group(self, message: str) -> bool:
         """Отправка сообщения в группу."""
+        from config.settings import get_settings
+        settings = get_settings()
         if settings.GROUP_ID:
             return await self.send_message(int(settings.GROUP_ID), message)
         return False
+    
+    async def create_group_invite_link(self, expire_date=None, member_limit=None) -> str:
+        """
+        Создание пригласительной ссылки для группы.
+        
+        Args:
+            expire_date: Дата истечения ссылки (datetime)
+            member_limit: Максимальное количество участников
+            
+        Returns:
+            str: Пригласительная ссылка
+        """
+        try:
+            from config.settings import get_settings
+            settings = get_settings()
+            
+            if not settings.GROUP_ID:
+                logger.error("GROUP_ID не настроен")
+                return None
+                
+            # Создаем пригласительную ссылку
+            invite_link = await self.bot.create_chat_invite_link(
+                chat_id=int(settings.GROUP_ID),
+                expire_date=expire_date,
+                member_limit=member_limit
+            )
+            
+            logger.info(f"Создана пригласительная ссылка для группы {settings.GROUP_ID}")
+            return invite_link.invite_link
+            
+        except Exception as e:
+            logger.error(f"Ошибка создания пригласительной ссылки: {e}")
+            return None
     
     async def send_message(self, user_id: int, message: str, keyboard=None, parse_mode="HTML") -> bool:
         """
