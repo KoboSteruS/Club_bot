@@ -76,6 +76,10 @@ class Settings(BaseSettings):
     # Настройки логирования
     LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
     LOG_FILE: str = Field(default="logs/clubbot.log", env="LOG_FILE")
+    LOG_ERROR_FILE: str = Field(default="logs/clubbot_errors.log", env="LOG_ERROR_FILE")
+    LOG_FORMAT: str = Field(default="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}", env="LOG_FORMAT")
+    LOG_ROTATION: str = Field(default="1 day", env="LOG_ROTATION")
+    LOG_RETENTION: str = Field(default="30 days", env="LOG_RETENTION")
     
     # Настройки разработки
     DEBUG: bool = Field(default=False, env="DEBUG")

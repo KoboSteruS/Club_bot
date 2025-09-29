@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from app.webhook_server import run_webhook_server
 from config.settings import get_settings
 from loguru import logger
+from app.core.logging import setup_logging_from_settings
 
 
 async def main():
@@ -38,6 +39,9 @@ async def main():
 
 
 if __name__ == "__main__":
+    # Настраиваем логирование
+    setup_logging_from_settings()
+    
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

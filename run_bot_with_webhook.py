@@ -21,6 +21,7 @@ from app.core.database import init_database
 from app.bot.bot import TelegramBot
 from app.webhook_server import WebhookServer
 from loguru import logger
+from app.core.logging import setup_logging_from_settings
 
 
 class BotWithWebhookRunner:
@@ -120,6 +121,9 @@ async def main():
 
 
 if __name__ == "__main__":
+    # Настраиваем логирование
+    setup_logging_from_settings()
+    
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

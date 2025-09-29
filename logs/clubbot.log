@@ -1,78 +1,24 @@
-2025-09-18 04:52:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 04:52:01 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 04:53:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 04:53:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 04:54:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 04:54:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 04:55:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 04:55:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 04:56:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 04:56:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 04:56:48 | INFO     | app.services.scheduler_service:send_warmup_messages:379 - Прогрев не используется в ClubBot
-2025-09-18 04:57:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 04:57:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 04:58:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 04:58:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 04:59:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 04:59:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:00:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:00:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:01:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:01:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:02:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:02:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:03:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:03:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:04:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:04:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:05:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:05:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:06:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:06:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:07:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:07:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:08:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:08:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:09:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:09:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:10:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:10:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 05:11:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 05:11:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:22:48 | INFO     | __main__:main:23 - 🚀 Запуск ClubBot...
-2025-09-18 14:22:48 | INFO     | __main__:main:24 - 📱 Название: ОСНОВА ПУТИ - ClubBot
-2025-09-18 14:22:48 | INFO     | __main__:main:25 - 🔧 Режим отладки: False
-2025-09-18 14:22:48 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
-2025-09-18 14:22:48 | INFO     | __main__:main:29 - ✅ База данных создана/обновлена
-2025-09-18 14:22:50 | INFO     | app.services.scheduler_service:_setup_jobs:170 - Планировщик задач настроен
-2025-09-18 14:22:50 | INFO     | app.bot.handlers:register_handlers:34 - ✅ Все обработчики зарегистрированы
-2025-09-18 14:22:50 | INFO     | app.bot.bot:_setup_handlers:38 - Обработчики команд настроены
-2025-09-18 14:22:50 | INFO     | __main__:main:38 - 🤖 Бот запущен: @osnovapti_bot
-2025-09-18 14:22:50 | INFO     | app.core.database:init_database:93 - База данных успешно инициализирована
-2025-09-18 14:22:50 | INFO     | app.bot.bot:start:45 - База данных инициализирована
-2025-09-18 14:22:50 | INFO     | app.services.scheduler_service:start:347 - Планировщик задач запущен
-2025-09-18 14:22:50 | INFO     | app.bot.bot:start:49 - Планировщик задач запущен
-2025-09-18 14:22:50 | INFO     | app.bot.bot:start:52 - Запуск Telegram бота...
-2025-09-18 14:22:51 | INFO     | app.bot.bot:start:57 - Telegram бот успешно запущен
-2025-09-18 14:23:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:23:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:24:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:24:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:25:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:25:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:26:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:26:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:27:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:27:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:28:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:28:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:29:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:29:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:30:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:30:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:31:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:31:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:32:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:32:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
-2025-09-18 14:33:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:178 - Начинаем отправку персональных напоминаний об отчетах
-2025-09-18 14:33:00 | INFO     | app.services.scheduler_service:send_daily_report_reminders:218 - Отправлено 0 напоминаний об отчетах
+2025-09-29 16:55:42 | INFO     | app.core.logging:setup_logging:106 - 🔧 Логирование настроено:
+2025-09-29 16:55:42 | INFO     | app.core.logging:setup_logging:107 -    📊 Уровень: INFO
+2025-09-29 16:55:42 | INFO     | app.core.logging:setup_logging:108 -    📁 Основной файл: logs/clubbot.log
+2025-09-29 16:55:42 | INFO     | app.core.logging:setup_logging:109 -    ❌ Файл ошибок: logs/clubbot_errors.log
+2025-09-29 16:55:42 | INFO     | app.core.logging:setup_logging:110 -    🔄 Ротация: 1 day
+2025-09-29 16:55:42 | INFO     | app.core.logging:setup_logging:111 -    🗂️ Хранение: 30 days
+2025-09-29 16:55:42 | INFO     | app.core.logging:setup_logging:112 -    🐛 Отладка: включена
+2025-09-29 16:55:42 | DEBUG    | __main__:test_logging:26 - 🐛 Это DEBUG сообщение - детальная информация для отладки
+2025-09-29 16:55:42 | INFO     | __main__:test_logging:27 - ℹ️ Это INFO сообщение - общая информация о работе
+2025-09-29 16:55:42 | WARNING  | __main__:test_logging:28 - ⚠️ Это WARNING сообщение - предупреждение о потенциальной проблеме
+2025-09-29 16:55:42 | ERROR    | __main__:test_logging:29 - ❌ Это ERROR сообщение - ошибка в работе приложения
+2025-09-29 16:55:42 | CRITICAL | __main__:test_logging:30 - 💥 Это CRITICAL сообщение - критическая ошибка
+2025-09-29 16:55:42 | ERROR    | __main__:test_logging:36 - 🔥 Исключение с полным traceback
+Traceback (most recent call last):
+
+  File "F:\Projects\OsnovaPutiBot\ClubBot\test_logging.py", line 58, in <module>
+    test_logging()
+
+> File "F:\Projects\OsnovaPutiBot\ClubBot\test_logging.py", line 34, in test_logging
+    result = 1 / 0
+
+ZeroDivisionError: division by zero
+2025-09-29 16:55:42 | INFO     | __main__:test_logging:45 - 👤 Действие пользователя: {'id': 12345, 'username': 'test_user', 'action': 'login', 'timestamp': '2025-09-29 12:00:00'}
+2025-09-29 16:55:42 | INFO     | __main__:test_logging:48 - 📊 Статистика: пользователей=100, активных=75
