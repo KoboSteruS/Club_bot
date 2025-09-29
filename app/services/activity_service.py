@@ -67,6 +67,9 @@ class ActivityService:
             logger.error(f"Ошибка записи активности: {e}")
             raise ActivityException(f"Не удалось записать активность: {e}")
     
+    # Алиас для совместимости
+    create_chat_activity = record_activity
+    
     async def get_user_activity_stats(self, user_id: str, period_type: ActivityPeriod, 
                                     start_date: date, end_date: Optional[date] = None) -> Dict[str, Any]:
         """Получить статистику активности пользователя за период."""

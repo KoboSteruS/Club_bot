@@ -105,7 +105,8 @@ settings = Settings()
 
 def get_settings() -> Settings:
     """Получить настройки приложения."""
-    return settings
+    # Всегда создаем новый экземпляр для получения актуальных данных
+    return Settings()
 
 
 # Настройки для ритуалов ЯДРА

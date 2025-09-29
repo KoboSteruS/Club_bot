@@ -4,7 +4,7 @@
 Обрабатывает команду /start и создает нового пользователя.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from loguru import logger
@@ -43,7 +43,6 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 # Если не подписан - создаем пригласительную ссылку и отправляем сообщение
                 try:
                     # Создаем пригласительную ссылку (действует 24 часа)
-                    from datetime import datetime, timedelta
                     expire_date = datetime.now() + timedelta(hours=24)
                     invite_link = await telegram_service.create_group_invite_link(expire_date=expire_date)
                     

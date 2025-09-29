@@ -16,11 +16,23 @@ from .admin_dashboard import (
     admin_users_handler,
     admin_access_handler,
     admin_give_access_all_handler,
+    admin_give_access_by_id_handler,
+    admin_revoke_access_by_id_handler,
+    handle_user_id_input,
     admin_activity_handler,
     admin_refresh_handler,
-    admin_broadcast_handler
+    admin_broadcast_handler,
+    admin_management_handler,
+    admin_add_admin_handler,
+    admin_remove_admin_handler,
+    handle_admin_id_input
 )
 from .group_info import group_info_handler
+from .group_activity import (
+    group_message_handler_func,
+    group_member_handler_func,
+    group_left_member_handler_func
+)
 
 
 def register_handlers(application: Application) -> None:
@@ -40,15 +52,34 @@ def register_handlers(application: Application) -> None:
         
         # Админ-панель callback queries
         application.add_handler(CallbackQueryHandler(admin_dashboard_handler, pattern="^admin_dashboard"))
-        application.add_handler(CallbackQueryHandler(admin_users_handler, pattern="^admin_users"))
+        application.add_handler(CallbackQueryHandler(admin_users_handler, pattern="^admin_users.*"))
         application.add_handler(CallbackQueryHandler(admin_access_handler, pattern="^admin_access"))
         application.add_handler(CallbackQueryHandler(admin_give_access_all_handler, pattern="^admin_give_access_all"))
+        application.add_handler(CallbackQueryHandler(admin_give_access_by_id_handler, pattern="^admin_give_access_by_id"))
+        application.add_handler(CallbackQueryHandler(admin_revoke_access_by_id_handler, pattern="^admin_revoke_access_by_id"))
+        application.add_handler(CallbackQueryHandler(admin_management_handler, pattern="^admin_management"))
+        application.add_handler(CallbackQueryHandler(admin_add_admin_handler, pattern="^admin_add_admin"))
+        application.add_handler(CallbackQueryHandler(admin_remove_admin_handler, pattern="^admin_remove_admin"))
         application.add_handler(CallbackQueryHandler(admin_activity_handler, pattern="^admin_activity"))
         application.add_handler(CallbackQueryHandler(admin_refresh_handler, pattern="^admin_refresh"))
         application.add_handler(CallbackQueryHandler(admin_broadcast_handler, pattern="^admin_broadcast"))
         
-        # Сообщения
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, start_handler))
+        # Обработчики активности в группе (должны быть ПЕРВЫМИ!)
+        application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, group_member_handler_func))
+        application.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, group_left_member_handler_func))
+        
+        # Сообщения из группы (для отслеживания активности)
+        from config.settings import get_settings
+        settings = get_settings()
+        if settings.GROUP_ID:
+            # Обработчик сообщений ТОЛЬКО для нашей группы
+            group_filter = filters.Chat(chat_id=int(settings.GROUP_ID)) & filters.TEXT & ~filters.COMMAND
+            application.add_handler(MessageHandler(group_filter, group_message_handler_func))
+        
+            # Личные сообщения пользователей
+            application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_id_input))
+            application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_id_input))
+            application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, start_handler))
         
         logger.info("✅ Все обработчики зарегистрированы")
         

@@ -99,6 +99,7 @@ async def admin_dashboard_handler(update: Update, context: ContextTypes.DEFAULT_
             keyboard = InlineKeyboardMarkup([
                 [InlineKeyboardButton("👥 Пользователи", callback_data="admin_users")],
                 [InlineKeyboardButton("🔑 Выдача доступа", callback_data="admin_access")],
+                [InlineKeyboardButton("👑 Управление админами", callback_data="admin_management")],
                 [InlineKeyboardButton("📈 Активность", callback_data="admin_activity")],
                 [InlineKeyboardButton("🔄 Обновить", callback_data="admin_refresh")],
                 [InlineKeyboardButton("📢 Рассылка", callback_data="admin_broadcast")]
@@ -135,13 +136,23 @@ async def admin_users_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         async with get_db_session() as session:
             user_service = UserService(session)
             
+            # Определяем номер страницы из callback_data
+            page = 0
+            if query.data and query.data.startswith("admin_users_page_"):
+                try:
+                    page = int(query.data.split("_")[-1])
+                except (ValueError, IndexError):
+                    page = 0
+            elif query.data == "admin_users_current":
+                # Если нажата кнопка текущей страницы, ничего не делаем
+                return
+            
             # Получаем общую статистику
             total_users = await user_service.get_total_users_count()
             active_users = await user_service.get_active_users_count()
             premium_users = await user_service.get_premium_users_count()
             
             # Получаем список всех пользователей с пагинацией
-            page = 0
             users_per_page = 10
             recent_users = await user_service.get_recent_users(limit=users_per_page, offset=page * users_per_page)
             
@@ -254,7 +265,8 @@ async def admin_access_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             
             keyboard = InlineKeyboardMarkup([
                 [InlineKeyboardButton("✅ Выдать доступ всем", callback_data="admin_give_access_all")],
-                [InlineKeyboardButton("👥 Выбрать пользователя", callback_data="admin_select_user")],
+                [InlineKeyboardButton("👤 Выдать доступ по ID", callback_data="admin_give_access_by_id")],
+                [InlineKeyboardButton("❌ Отменить доступ по ID", callback_data="admin_revoke_access_by_id")],
                 [InlineKeyboardButton("🔄 Обновить", callback_data="admin_access")],
                 [InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_dashboard")]
             ])
@@ -326,6 +338,127 @@ async def admin_give_access_all_handler(update: Update, context: ContextTypes.DE
     except Exception as e:
         logger.error(f"Ошибка в admin_give_access_all_handler: {e}")
         await query.edit_message_text("❌ Произошла ошибка при выдаче доступа.")
+
+
+async def admin_give_access_by_id_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик выдачи доступа по ID пользователя."""
+    try:
+        query = update.callback_query
+        await safe_answer_callback(query, "👤 Введите ID пользователя для выдачи доступа")
+        
+        settings = get_settings()
+        user_id = query.from_user.id
+        
+        if user_id not in settings.admin_ids_list:
+            await query.edit_message_text("❌ У вас нет прав администратора.")
+            return
+        
+        # Запрашиваем ID пользователя
+        message = """👤 <b>Выдача доступа по ID</b>
+
+Введите Telegram ID пользователя, которому нужно выдать доступ.
+
+<b>Пример:</b> <code>123456789</code>
+
+💡 <b>Как найти ID:</b>
+• Попросите пользователя написать боту @userinfobot
+• Или используйте команду /start и посмотрите в логах бота
+
+Для отмены нажмите "Назад к панели"."""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_dashboard")]
+        ])
+        
+        await query.edit_message_text(message, reply_markup=keyboard, parse_mode='HTML')
+        
+        # Сохраняем состояние для ожидания ввода ID
+        context.user_data['waiting_for_user_id'] = True
+        
+    except Exception as e:
+        logger.error(f"Ошибка в admin_give_access_by_id_handler: {e}")
+        await query.edit_message_text("❌ Произошла ошибка при запросе ID пользователя.")
+
+
+async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик ввода ID пользователя для выдачи доступа."""
+    try:
+        # Проверяем, ожидаем ли мы ввод ID для выдачи или отмены доступа
+        if not (context.user_data.get('waiting_for_user_id', False) or 
+                context.user_data.get('waiting_for_revoke_user_id', False)):
+            return
+        
+        # Если ожидаем отмену доступа, вызываем соответствующий обработчик
+        if context.user_data.get('waiting_for_revoke_user_id', False):
+            await handle_revoke_user_id_input(update, context)
+            return
+            
+        user_message = update.message.text.strip()
+        
+        # Проверяем, что это число
+        try:
+            target_user_id = int(user_message)
+        except ValueError:
+            await update.message.reply_text(
+                "❌ Неверный формат ID. Введите числовой ID пользователя.\n\n"
+                "Пример: <code>123456789</code>",
+                parse_mode='HTML'
+            )
+            return
+        
+        # Проверяем права администратора
+        settings = get_settings()
+        admin_id = update.effective_user.id
+        
+        if admin_id not in settings.admin_ids_list:
+            await update.message.reply_text("❌ У вас нет прав администратора.")
+            context.user_data['waiting_for_user_id'] = False
+            return
+        
+        async with get_db_session() as session:
+            user_service = UserService(session)
+            
+            # Ищем пользователя по Telegram ID
+            target_user = await user_service.get_user_by_telegram_id(target_user_id)
+            
+            if not target_user:
+                await update.message.reply_text(
+                    f"❌ Пользователь с ID <code>{target_user_id}</code> не найден в базе данных.\n\n"
+                    "Убедитесь, что пользователь хотя бы раз писал боту.",
+                    parse_mode='HTML'
+                )
+                context.user_data['waiting_for_user_id'] = False
+                return
+            
+            # Выдаем доступ
+            from datetime import datetime, timedelta
+            from app.schemas.user import UserUpdate
+            
+            subscription_until = datetime.now() + timedelta(days=30)
+            
+            await user_service.update_user(str(target_user.id), UserUpdate(
+                status="active",
+                is_premium=True,
+                subscription_until=subscription_until
+            ))
+            
+            success_message = f"""✅ <b>Доступ выдан успешно!</b>
+
+👤 <b>Пользователь:</b> {target_user.first_name}
+🆔 <b>ID:</b> <code>{target_user.telegram_id}</code>
+📅 <b>Подписка до:</b> {subscription_until.strftime('%d.%m.%Y %H:%M')}
+
+Пользователь теперь имеет доступ к функциям клуба."""
+            
+            await update.message.reply_text(success_message, parse_mode='HTML')
+            
+            # Очищаем состояние
+            context.user_data['waiting_for_user_id'] = False
+            
+    except Exception as e:
+        logger.error(f"Ошибка в handle_user_id_input: {e}")
+        await update.message.reply_text("❌ Произошла ошибка при выдаче доступа.")
+        context.user_data['waiting_for_user_id'] = False
 
 
 async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -430,3 +563,368 @@ async def admin_broadcast_handler(update: Update, context: ContextTypes.DEFAULT_
     except Exception as e:
         logger.error(f"Ошибка в admin_broadcast_handler: {e}")
         await query.edit_message_text("❌ Произошла ошибка при загрузке меню рассылки.")
+
+
+async def admin_revoke_access_by_id_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик отмены доступа по ID пользователя."""
+    try:
+        query = update.callback_query
+        await safe_answer_callback(query, "❌ Введите ID пользователя для отмены доступа")
+        
+        settings = get_settings()
+        user_id = query.from_user.id
+        
+        if user_id not in settings.admin_ids_list:
+            await query.edit_message_text("❌ У вас нет прав администратора.")
+            return
+        
+        # Запрашиваем ID пользователя
+        message = """❌ <b>Отмена доступа по ID</b>
+
+Введите Telegram ID пользователя, у которого нужно отменить доступ.
+
+<b>Пример:</b> <code>123456789</code>
+
+💡 <b>Как найти ID:</b>
+• Посмотрите в админ-панели в разделе "Пользователи"
+• Или используйте команду /start и посмотрите в логах бота
+
+Для отмены нажмите "Назад к панели"."""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_access")]
+        ])
+        
+        await query.edit_message_text(message, reply_markup=keyboard, parse_mode='HTML')
+        
+        # Сохраняем состояние для ожидания ввода ID
+        context.user_data['waiting_for_revoke_user_id'] = True
+        
+    except Exception as e:
+        logger.error(f"Ошибка в admin_revoke_access_by_id_handler: {e}")
+        await query.edit_message_text("❌ Произошла ошибка при запросе ID пользователя.")
+
+
+async def handle_revoke_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик ввода ID пользователя для отмены доступа."""
+    try:
+        # Проверяем, ожидаем ли мы ввод ID для отмены доступа
+        if not context.user_data.get('waiting_for_revoke_user_id', False):
+            return
+            
+        user_message = update.message.text.strip()
+        
+        # Проверяем, что это число
+        try:
+            target_user_id = int(user_message)
+        except ValueError:
+            await update.message.reply_text(
+                "❌ Неверный формат ID. Введите числовой ID пользователя.\n\n"
+                "Пример: <code>123456789</code>",
+                parse_mode='HTML'
+            )
+            return
+        
+        # Проверяем права администратора
+        settings = get_settings()
+        admin_id = update.effective_user.id
+        
+        if admin_id not in settings.admin_ids_list:
+            await update.message.reply_text("❌ У вас нет прав администратора.")
+            context.user_data['waiting_for_revoke_user_id'] = False
+            return
+        
+        async with get_db_session() as session:
+            user_service = UserService(session)
+            
+            # Ищем пользователя по Telegram ID
+            target_user = await user_service.get_user_by_telegram_id(target_user_id)
+            
+            if not target_user:
+                await update.message.reply_text(
+                    f"❌ Пользователь с ID <code>{target_user_id}</code> не найден в базе данных.\n\n"
+                    "Убедитесь, что пользователь хотя бы раз писал боту.",
+                    parse_mode='HTML'
+                )
+                context.user_data['waiting_for_revoke_user_id'] = False
+                return
+            
+            # Отменяем доступ
+            from app.schemas.user import UserUpdate
+            
+            await user_service.update_user(str(target_user.id), UserUpdate(
+                status="pending",
+                is_premium=False,
+                subscription_until=None
+            ))
+            
+            success_message = f"""✅ <b>Доступ отменен успешно!</b>
+
+👤 <b>Пользователь:</b> {target_user.first_name}
+🆔 <b>ID:</b> <code>{target_user.telegram_id}</code>
+📅 <b>Статус:</b> pending (доступ отменен)
+
+Пользователь больше не имеет доступ к функциям клуба."""
+            
+            await update.message.reply_text(success_message, parse_mode='HTML')
+            
+            # Очищаем состояние
+            context.user_data['waiting_for_revoke_user_id'] = False
+            
+    except Exception as e:
+        logger.error(f"Ошибка в handle_revoke_user_id_input: {e}")
+        await update.message.reply_text("❌ Произошла ошибка при отмене доступа.")
+        context.user_data['waiting_for_revoke_user_id'] = False
+
+
+async def admin_management_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик управления администраторами."""
+    try:
+        query = update.callback_query
+        await safe_answer_callback(query, "👑 Управление администраторами")
+        
+        settings = get_settings()
+        user_id = query.from_user.id
+        
+        if user_id not in settings.admin_ids_list:
+            await query.edit_message_text("❌ У вас нет прав администратора.")
+            return
+        
+        # Проверяем, является ли пользователь супер-администратором
+        if user_id != settings.SUPER_ADMIN_ID:
+            await query.edit_message_text("❌ Только супер-администратор может управлять администраторами.")
+            return
+        
+        # Получаем список текущих администраторов
+        from app.services.admin_service import AdminService
+        admin_service = AdminService()
+        current_admins = await admin_service.get_current_admins()
+        
+        # Формируем сообщение
+        message = "👑 <b>Управление администраторами</b>\n\n"
+        message += "<b>Текущие администраторы:</b>\n"
+        
+        for admin in current_admins:
+            status = "🔴 Супер-админ" if admin['is_super_admin'] else "🟡 Админ"
+            message += f"• ID: <code>{admin['id']}</code> - {status}\n"
+        
+        message += f"\n<b>Супер-администратор:</b> <code>{settings.SUPER_ADMIN_ID}</code>"
+        message += "\n\nВыберите действие:"
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("➕ Добавить админа", callback_data="admin_add_admin")],
+            [InlineKeyboardButton("➖ Удалить админа", callback_data="admin_remove_admin")],
+            [InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_dashboard")]
+        ])
+        
+        await query.edit_message_text(message, reply_markup=keyboard, parse_mode='HTML')
+        
+    except Exception as e:
+        logger.error(f"Ошибка в admin_management_handler: {e}")
+        await query.edit_message_text("❌ Произошла ошибка при загрузке управления администраторами.")
+
+
+async def admin_add_admin_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик добавления администратора."""
+    try:
+        query = update.callback_query
+        await safe_answer_callback(query, "➕ Добавление администратора")
+        
+        settings = get_settings()
+        user_id = query.from_user.id
+        
+        if user_id != settings.SUPER_ADMIN_ID:
+            await query.edit_message_text("❌ Только супер-администратор может добавлять администраторов.")
+            return
+        
+        message = """➕ <b>Добавление администратора</b>
+
+Введите Telegram ID пользователя, которого нужно сделать администратором.
+
+<b>Пример:</b> <code>123456789</code>
+
+💡 <b>Как найти ID:</b>
+• Попросите пользователя написать боту /start
+• Посмотрите в логах бота или в админ-панели
+
+Для отмены нажмите "Назад к управлению"."""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 Назад к управлению", callback_data="admin_management")]
+        ])
+        
+        await query.edit_message_text(message, reply_markup=keyboard, parse_mode='HTML')
+        
+        # Сохраняем состояние для ожидания ввода ID
+        context.user_data['waiting_for_add_admin_id'] = True
+        
+    except Exception as e:
+        logger.error(f"Ошибка в admin_add_admin_handler: {e}")
+        await query.edit_message_text("❌ Произошла ошибка при запросе ID администратора.")
+
+
+async def admin_remove_admin_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик удаления администратора."""
+    try:
+        query = update.callback_query
+        await safe_answer_callback(query, "➖ Удаление администратора")
+        
+        settings = get_settings()
+        user_id = query.from_user.id
+        
+        if user_id != settings.SUPER_ADMIN_ID:
+            await query.edit_message_text("❌ Только супер-администратор может удалять администраторов.")
+            return
+        
+        message = """➖ <b>Удаление администратора</b>
+
+Введите Telegram ID администратора, которого нужно удалить.
+
+<b>Пример:</b> <code>123456789</code>
+
+⚠️ <b>Внимание:</b>
+• Супер-администратора удалить нельзя
+• Удаленный пользователь потеряет доступ к админ-панели
+
+Для отмены нажмите "Назад к управлению"."""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 Назад к управлению", callback_data="admin_management")]
+        ])
+        
+        await query.edit_message_text(message, reply_markup=keyboard, parse_mode='HTML')
+        
+        # Сохраняем состояние для ожидания ввода ID
+        context.user_data['waiting_for_remove_admin_id'] = True
+        
+    except Exception as e:
+        logger.error(f"Ошибка в admin_remove_admin_handler: {e}")
+        await query.edit_message_text("❌ Произошла ошибка при запросе ID администратора.")
+
+
+async def handle_admin_id_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик ввода ID администратора."""
+    try:
+        # Проверяем, ожидаем ли мы ввод ID для добавления админа
+        if context.user_data.get('waiting_for_add_admin_id', False):
+            await handle_add_admin_id_input(update, context)
+            return
+        
+        # Проверяем, ожидаем ли мы ввод ID для удаления админа
+        if context.user_data.get('waiting_for_remove_admin_id', False):
+            await handle_remove_admin_id_input(update, context)
+            return
+            
+    except Exception as e:
+        logger.error(f"Ошибка в handle_admin_id_input: {e}")
+        await update.message.reply_text("❌ Произошла ошибка при обработке ID администратора.")
+
+
+async def handle_add_admin_id_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик ввода ID для добавления администратора."""
+    try:
+        user_message = update.message.text.strip()
+        
+        # Проверяем, что это число
+        try:
+            admin_id = int(user_message)
+        except ValueError:
+            await update.message.reply_text(
+                "❌ Неверный формат ID. Введите числовой ID пользователя.\n\n"
+                "Пример: <code>123456789</code>",
+                parse_mode='HTML'
+            )
+            return
+        
+        # Проверяем права администратора
+        settings = get_settings()
+        current_admin_id = update.effective_user.id
+        
+        if current_admin_id != settings.SUPER_ADMIN_ID:
+            await update.message.reply_text("❌ Только супер-администратор может добавлять администраторов.")
+            context.user_data['waiting_for_add_admin_id'] = False
+            return
+        
+        # Добавляем администратора
+        from app.services.admin_service import AdminService
+        admin_service = AdminService()
+        
+        result = await admin_service.add_admin(admin_id, current_admin_id)
+        
+        if result['success']:
+            success_message = f"""✅ <b>Администратор добавлен успешно!</b>
+
+👤 <b>ID:</b> <code>{admin_id}</code>
+📅 <b>Время:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}
+
+{result['message']}
+
+✅ <b>Изменения применены мгновенно!</b>
+• Новый администратор получил доступ к админ-панели"""
+            
+            await update.message.reply_text(success_message, parse_mode='HTML')
+        else:
+            await update.message.reply_text(f"❌ {result['message']}")
+        
+        # Очищаем состояние
+        context.user_data['waiting_for_add_admin_id'] = False
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_add_admin_id_input: {e}")
+        await update.message.reply_text("❌ Произошла ошибка при добавлении администратора.")
+        context.user_data['waiting_for_add_admin_id'] = False
+
+
+async def handle_remove_admin_id_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик ввода ID для удаления администратора."""
+    try:
+        user_message = update.message.text.strip()
+        
+        # Проверяем, что это число
+        try:
+            admin_id = int(user_message)
+        except ValueError:
+            await update.message.reply_text(
+                "❌ Неверный формат ID. Введите числовой ID администратора.\n\n"
+                "Пример: <code>123456789</code>",
+                parse_mode='HTML'
+            )
+            return
+        
+        # Проверяем права администратора
+        settings = get_settings()
+        current_admin_id = update.effective_user.id
+        
+        if current_admin_id != settings.SUPER_ADMIN_ID:
+            await update.message.reply_text("❌ Только супер-администратор может удалять администраторов.")
+            context.user_data['waiting_for_remove_admin_id'] = False
+            return
+        
+        # Удаляем администратора
+        from app.services.admin_service import AdminService
+        admin_service = AdminService()
+        
+        result = await admin_service.remove_admin(admin_id, current_admin_id)
+        
+        if result['success']:
+            success_message = f"""✅ <b>Администратор удален успешно!</b>
+
+👤 <b>ID:</b> <code>{admin_id}</code>
+📅 <b>Время:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}
+
+{result['message']}
+
+✅ <b>Изменения применены мгновенно!</b>
+• Пользователь потерял доступ к админ-панели"""
+            
+            await update.message.reply_text(success_message, parse_mode='HTML')
+        else:
+            await update.message.reply_text(f"❌ {result['message']}")
+        
+        # Очищаем состояние
+        context.user_data['waiting_for_remove_admin_id'] = False
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_remove_admin_id_input: {e}")
+        await update.message.reply_text("❌ Произошла ошибка при удалении администратора.")
+        context.user_data['waiting_for_remove_admin_id'] = False
