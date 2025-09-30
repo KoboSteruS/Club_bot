@@ -48,9 +48,9 @@ class Settings(BaseSettings):
     FREKASSA_API_KEY: str = Field(default="", env="FREKASSA_API_KEY")
     
     # Настройки тарифов
-    MONTHLY_PRICE: int = Field(default=2990, env="MONTHLY_PRICE")  # в рублях
-    QUARTERLY_PRICE: int = Field(default=7990, env="QUARTERLY_PRICE")  # в рублях
-    YEARLY_PRICE: int = Field(default=29990, env="YEARLY_PRICE")  # в рублях
+    MONTHLY_PRICE: int = Field(default=3300, env="MONTHLY_PRICE")  # 33 доллара в рублях (примерно 3300 руб)
+    QUARTERLY_PRICE: int = Field(default=3300, env="QUARTERLY_PRICE")  # 33 доллара в рублях
+    YEARLY_PRICE: int = Field(default=3300, env="YEARLY_PRICE")  # 33 доллара в рублях
     
     # Настройки напоминаний
     RENEWAL_REMINDER_DAYS: int = Field(default=3, env="RENEWAL_REMINDER_DAYS")
@@ -204,22 +204,10 @@ class PaymentSettings:
     # Тарифы
     TARIFFS = {
         "monthly": {
-            "name": "1 месяц",
-            "price": 2990,
+            "name": "Доступ к клубу",
+            "price": 3300,
             "currency": "RUB",
-            "description": "Доступ к клубу на 1 месяц"
-        },
-        "quarterly": {
-            "name": "3 месяца",
-            "price": 7990,
-            "currency": "RUB",
-            "description": "Доступ к клубу на 3 месяца (скидка 10%)"
-        },
-        "yearly": {
-            "name": "1 год",
-            "price": 29990,
-            "currency": "RUB",
-            "description": "Доступ к клубу на 1 год (скидка 15%)"
+            "description": "Доступ к клубу «ОСНОВА ПУТИ»"
         }
     }
     
