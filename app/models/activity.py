@@ -17,13 +17,21 @@ from app.models.base import BaseModel
 
 class ActivityType(str, Enum):
     """Тип активности в чате."""
-    MESSAGE = "message"           # Обычное сообщение
+    MESSAGE = "message"           # Обычное текстовое сообщение
     PHOTO = "photo"              # Фото
     VIDEO = "video"              # Видео
-    DOCUMENT = "document"        # Документ
+    VIDEO_NOTE = "video_note"    # Видеосообщение (круглое)
     VOICE = "voice"              # Голосовое сообщение
+    AUDIO = "audio"              # Аудиофайл
+    DOCUMENT = "document"        # Документ
     STICKER = "sticker"          # Стикер
+    ANIMATION = "animation"      # GIF анимация
     POLL = "poll"                # Опрос
+    LOCATION = "location"        # Геолокация
+    CONTACT = "contact"          # Контакт
+    GAME = "game"                # Игра
+    INVOICE = "invoice"          # Инвойс
+    SUCCESSFUL_PAYMENT = "successful_payment"  # Успешный платеж
     FORWARD = "forward"          # Пересланное сообщение
     REPLY = "reply"              # Ответ на сообщение
     EDIT = "edit"                # Редактирование сообщения
@@ -66,6 +74,11 @@ class ChatActivity(BaseModel):
     is_reply = Column(Boolean, default=False, comment="Является ли ответом")
     is_forward = Column(Boolean, default=False, comment="Является ли пересылкой")
     reply_to_user_id = Column(String(36), nullable=True, comment="ID пользователя, на которого отвечают")
+    
+    # Медиа-контент
+    media_file_id = Column(String(100), nullable=True, comment="ID медиафайла в Telegram")
+    media_duration = Column(Integer, nullable=True, comment="Длительность аудио/видео в секундах")
+    media_file_size = Column(Integer, nullable=True, comment="Размер файла в байтах")
     
     # Связи
     user = relationship("User", back_populates="chat_activities")

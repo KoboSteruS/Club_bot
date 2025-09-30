@@ -75,8 +75,8 @@ def register_handlers(application: Application) -> None:
         from config.settings import get_settings
         settings = get_settings()
         if settings.GROUP_ID:
-            # Обработчик сообщений ТОЛЬКО для нашей группы
-            group_filter = filters.Chat(chat_id=int(settings.GROUP_ID)) & filters.TEXT & ~filters.COMMAND
+            # Обработчик ВСЕХ типов сообщений ТОЛЬКО для нашей группы
+            group_filter = filters.Chat(chat_id=int(settings.GROUP_ID)) & ~filters.COMMAND
             application.add_handler(MessageHandler(group_filter, group_message_handler_func))
         
         # Личные сообщения пользователей (работают всегда)

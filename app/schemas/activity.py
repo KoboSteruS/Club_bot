@@ -21,13 +21,18 @@ class ChatActivityCreate(BaseModel):
     chat_id: str = Field(..., description="ID чата Telegram")
     message_id: Optional[int] = Field(None, description="ID сообщения Telegram")
     activity_type: ActivityType = Field(..., description="Тип активности")
-    message_text: Optional[str] = Field(None, description="Текст сообщения")
+    message_text: Optional[str] = Field(None, description="Текст сообщения или подпись к медиа")
     message_length: int = Field(0, description="Длина сообщения")
     activity_date: date = Field(..., description="Дата активности")
     activity_hour: int = Field(..., ge=0, le=23, description="Час активности")
     is_reply: bool = Field(False, description="Является ли ответом")
     is_forward: bool = Field(False, description="Является ли пересылкой")
     reply_to_user_id: Optional[str] = Field(None, description="ID пользователя ответа")
+    
+    # Дополнительные поля для медиа-контента
+    media_file_id: Optional[str] = Field(None, description="ID медиафайла в Telegram")
+    media_duration: Optional[int] = Field(None, description="Длительность аудио/видео в секундах")
+    media_file_size: Optional[int] = Field(None, description="Размер файла в байтах")
 
 
 class ChatActivityResponse(BaseModel):

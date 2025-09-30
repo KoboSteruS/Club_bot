@@ -481,11 +481,17 @@ async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_T
             # Получаем статистику активности
             today = datetime.utcnow().date()
             yesterday = (datetime.utcnow() - timedelta(days=1)).date()
+            week_ago = (datetime.utcnow() - timedelta(days=7)).date()
             
             activity_today = await activity_service.get_activity_stats_for_date(today)
             activity_yesterday = await activity_service.get_activity_stats_for_date(yesterday)
+            activity_week = await activity_service.get_activity_stats_for_period(week_ago, today)
             
-            message = f"""📈 <b>Активность в канале:</b>
+            # Получаем статистику по типам сообщений
+            message_types_today = await activity_service.get_message_types_stats_for_date(today)
+            message_types_week = await activity_service.get_message_types_stats_for_period(week_ago, today)
+            
+            message = f"""📈 <b>Детальная активность в группе</b>
 
 📅 <b>Сегодня ({today.strftime('%d.%m.%Y')}):</b>
 • Сообщений: {activity_today.get('messages', 0)}
@@ -494,6 +500,21 @@ async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_T
 📅 <b>Вчера ({yesterday.strftime('%d.%m.%Y')}):</b>
 • Сообщений: {activity_yesterday.get('messages', 0)}
 • Активных пользователей: {activity_yesterday.get('active_users', 0)}
+
+📊 <b>За неделю:</b>
+• Всего сообщений: {activity_week.get('messages', 0)}
+• Уникальных пользователей: {activity_week.get('active_users', 0)}
+
+🎯 <b>Типы сообщений за неделю:</b>
+• 💬 Текст: {message_types_week.get('message', 0)}
+• 🎤 Голосовые: {message_types_week.get('voice', 0)}
+• 📹 Видеосообщения: {message_types_week.get('video_note', 0)}
+• 🖼️ Фото: {message_types_week.get('photo', 0)}
+• 🎬 Видео: {message_types_week.get('video', 0)}
+• 🎵 Аудио: {message_types_week.get('audio', 0)}
+• 📄 Документы: {message_types_week.get('document', 0)}
+• 😀 Стикеры: {message_types_week.get('sticker', 0)}
+• 🎞️ GIF: {message_types_week.get('animation', 0)}
 
 ⚡ <b>Топ активных пользователей за неделю:</b>
 """

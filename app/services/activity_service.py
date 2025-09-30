@@ -52,7 +52,10 @@ class ActivityService:
                 activity_hour=activity_data.activity_hour,
                 is_reply=activity_data.is_reply,
                 is_forward=activity_data.is_forward,
-                reply_to_user_id=activity_data.reply_to_user_id
+                reply_to_user_id=activity_data.reply_to_user_id,
+                media_file_id=activity_data.media_file_id,
+                media_duration=activity_data.media_duration,
+                media_file_size=activity_data.media_file_size
             )
             
             self.session.add(activity)
@@ -583,4 +586,86 @@ class ActivityService:
         except Exception as e:
             logger.error(f"Ошибка получения топ активных пользователей: {e}")
             return []
+    
+    async def get_message_types_stats_for_date(self, target_date: date) -> Dict[str, int]:
+        """Получить статистику по типам сообщений за дату."""
+        try:
+            result = await self.session.execute(
+                select(
+                    ChatActivity.activity_type,
+                    func.count(ChatActivity.id).label('count')
+                )
+                .where(ChatActivity.activity_date == target_date)
+                .group_by(ChatActivity.activity_type)
+            )
+            
+            stats = {}
+            for row in result:
+                stats[row.activity_type] = row.count
+            
+            return stats
+        except Exception as e:
+            logger.error(f"Ошибка получения статистики типов сообщений за {target_date}: {e}")
+            return {}
+    
+    async def get_message_types_stats_for_period(self, start_date: date, end_date: date) -> Dict[str, int]:
+        """Получить статистику по типам сообщений за период."""
+        try:
+            result = await self.session.execute(
+                select(
+                    ChatActivity.activity_type,
+                    func.count(ChatActivity.id).label('count')
+                )
+                .where(
+                    and_(
+                        ChatActivity.activity_date >= start_date,
+                        ChatActivity.activity_date <= end_date
+                    )
+                )
+                .group_by(ChatActivity.activity_type)
+            )
+            
+            stats = {}
+            for row in result:
+                stats[row.activity_type] = row.count
+            
+            return stats
+        except Exception as e:
+            logger.error(f"Ошибка получения статистики типов сообщений за период {start_date}-{end_date}: {e}")
+            return {}
+    
+    async def get_activity_stats_for_period(self, start_date: date, end_date: date) -> Dict[str, Any]:
+        """Получить общую статистику активности за период."""
+        try:
+            # Общее количество сообщений
+            total_messages_result = await self.session.execute(
+                select(func.count(ChatActivity.id))
+                .where(
+                    and_(
+                        ChatActivity.activity_date >= start_date,
+                        ChatActivity.activity_date <= end_date
+                    )
+                )
+            )
+            total_messages = total_messages_result.scalar() or 0
+            
+            # Количество уникальных пользователей
+            unique_users_result = await self.session.execute(
+                select(func.count(func.distinct(ChatActivity.user_id)))
+                .where(
+                    and_(
+                        ChatActivity.activity_date >= start_date,
+                        ChatActivity.activity_date <= end_date
+                    )
+                )
+            )
+            unique_users = unique_users_result.scalar() or 0
+            
+            return {
+                'messages': total_messages,
+                'active_users': unique_users
+            }
+        except Exception as e:
+            logger.error(f"Ошибка получения статистики активности за период {start_date}-{end_date}: {e}")
+            return {'messages': 0, 'active_users': 0}
 

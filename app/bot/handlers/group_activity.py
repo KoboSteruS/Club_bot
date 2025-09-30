@@ -43,7 +43,32 @@ async def group_message_handler(update: Update, context: ContextTypes.DEFAULT_TY
         user = update.message.from_user
         message = update.message
         
-        logger.info(f"📝 Сообщение в группе от пользователя {user.id} (@{user.username}): {message.text[:50] if message.text else 'медиа'}")
+        # Определяем тип сообщения для логирования
+        message_type = "текст"
+        if message.video_note:
+            message_type = "видеосообщение"
+        elif message.voice:
+            message_type = "голосовое"
+        elif message.video:
+            message_type = "видео"
+        elif message.audio:
+            message_type = "аудио"
+        elif message.photo:
+            message_type = "фото"
+        elif message.animation:
+            message_type = "GIF"
+        elif message.sticker:
+            message_type = "стикер"
+        elif message.document:
+            message_type = "документ"
+        elif message.poll:
+            message_type = "опрос"
+        elif message.location:
+            message_type = "геолокация"
+        elif message.contact:
+            message_type = "контакт"
+        
+        logger.info(f"📝 {message_type.title()} в группе от пользователя {user.id} (@{user.username}): {message.text[:50] if message.text else message.caption[:50] if message.caption else ''}")
         
         async with get_db_session() as session:
             user_service = UserService(session)
@@ -78,22 +103,75 @@ async def group_message_handler(update: Update, context: ContextTypes.DEFAULT_TY
             # Определяем тип активности
             activity_type = ActivityType.MESSAGE
             
-            if message.photo:
-                activity_type = ActivityType.PHOTO
-            elif message.video:
-                activity_type = ActivityType.VIDEO
-            elif message.document:
-                activity_type = ActivityType.DOCUMENT
-            elif message.voice:
-                activity_type = ActivityType.VOICE
-            elif message.sticker:
-                activity_type = ActivityType.STICKER
-            elif message.poll:
-                activity_type = ActivityType.POLL
-            elif message.forward_from or message.forward_from_chat:
+            # Проверяем пересылку и ответы в первую очередь
+            if message.forward_from or message.forward_from_chat:
                 activity_type = ActivityType.FORWARD
             elif message.reply_to_message:
                 activity_type = ActivityType.REPLY
+            # Затем проверяем медиа контент
+            elif message.video_note:
+                activity_type = ActivityType.VIDEO_NOTE
+            elif message.voice:
+                activity_type = ActivityType.VOICE
+            elif message.video:
+                activity_type = ActivityType.VIDEO
+            elif message.audio:
+                activity_type = ActivityType.AUDIO
+            elif message.photo:
+                activity_type = ActivityType.PHOTO
+            elif message.animation:
+                activity_type = ActivityType.ANIMATION
+            elif message.sticker:
+                activity_type = ActivityType.STICKER
+            elif message.document:
+                activity_type = ActivityType.DOCUMENT
+            elif message.poll:
+                activity_type = ActivityType.POLL
+            elif message.location:
+                activity_type = ActivityType.LOCATION
+            elif message.contact:
+                activity_type = ActivityType.CONTACT
+            elif message.game:
+                activity_type = ActivityType.GAME
+            elif message.invoice:
+                activity_type = ActivityType.INVOICE
+            elif message.successful_payment:
+                activity_type = ActivityType.SUCCESSFUL_PAYMENT
+            
+            # Извлекаем информацию о медиа-файлах
+            media_file_id = None
+            media_duration = None
+            media_file_size = None
+            
+            if message.video_note:
+                media_file_id = message.video_note.file_id
+                media_duration = message.video_note.duration
+                media_file_size = message.video_note.file_size
+            elif message.voice:
+                media_file_id = message.voice.file_id
+                media_duration = message.voice.duration
+                media_file_size = message.voice.file_size
+            elif message.video:
+                media_file_id = message.video.file_id
+                media_duration = message.video.duration
+                media_file_size = message.video.file_size
+            elif message.audio:
+                media_file_id = message.audio.file_id
+                media_duration = message.audio.duration
+                media_file_size = message.audio.file_size
+            elif message.photo:
+                # Берем самое большое фото
+                media_file_id = message.photo[-1].file_id
+                media_file_size = message.photo[-1].file_size
+            elif message.document:
+                media_file_id = message.document.file_id
+                media_file_size = message.document.file_size
+            elif message.animation:
+                media_file_id = message.animation.file_id
+                media_file_size = message.animation.file_size
+            elif message.sticker:
+                media_file_id = message.sticker.file_id
+                media_file_size = message.sticker.file_size
             
             # Создаем запись активности
             from app.schemas.activity import ChatActivityCreate
@@ -108,7 +186,10 @@ async def group_message_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 activity_date=date.today(),
                 activity_hour=datetime.now().hour,
                 is_reply=bool(message.reply_to_message),
-                is_forward=bool(message.forward_from or message.forward_from_chat)
+                is_forward=bool(message.forward_from or message.forward_from_chat),
+                media_file_id=media_file_id,
+                media_duration=media_duration,
+                media_file_size=media_file_size
             )
             
             await activity_service.create_chat_activity(activity_data)
