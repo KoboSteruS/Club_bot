@@ -19,6 +19,7 @@ from .admin_dashboard import (
     admin_give_access_by_id_handler,
     admin_revoke_access_by_id_handler,
     handle_user_id_input,
+    handle_revoke_user_id_input,
     admin_activity_handler,
     admin_refresh_handler,
     admin_broadcast_handler,
@@ -76,10 +77,10 @@ def register_handlers(application: Application) -> None:
             group_filter = filters.Chat(chat_id=int(settings.GROUP_ID)) & filters.TEXT & ~filters.COMMAND
             application.add_handler(MessageHandler(group_filter, group_message_handler_func))
         
-            # Личные сообщения пользователей
-            application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_id_input))
-            application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_id_input))
-            application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, start_handler))
+        # Личные сообщения пользователей (работают всегда)
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_id_input))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_id_input))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, start_handler))
         
         logger.info("✅ Все обработчики зарегистрированы")
         

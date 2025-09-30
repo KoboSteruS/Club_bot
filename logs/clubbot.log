@@ -22,3 +22,27 @@ Traceback (most recent call last):
 ZeroDivisionError: division by zero
 2025-09-29 16:55:42 | INFO     | __main__:test_logging:45 - 👤 Действие пользователя: {'id': 12345, 'username': 'test_user', 'action': 'login', 'timestamp': '2025-09-29 12:00:00'}
 2025-09-29 16:55:42 | INFO     | __main__:test_logging:48 - 📊 Статистика: пользователей=100, активных=75
+2025-09-30 09:41:24 | INFO     | app.core.logging:setup_logging:106 - 🔧 Логирование настроено:
+2025-09-30 09:41:24 | INFO     | app.core.logging:setup_logging:107 -    📊 Уровень: INFO
+2025-09-30 09:41:24 | INFO     | app.core.logging:setup_logging:108 -    📁 Основной файл: logs/clubbot.log
+2025-09-30 09:41:24 | INFO     | app.core.logging:setup_logging:109 -    ❌ Файл ошибок: logs/clubbot_errors.log
+2025-09-30 09:41:24 | INFO     | app.core.logging:setup_logging:110 -    🔄 Ротация: 1 day
+2025-09-30 09:41:24 | INFO     | app.core.logging:setup_logging:111 -    🗂️ Хранение: 30 days
+2025-09-30 09:41:24 | INFO     | app.core.logging:setup_logging:112 -    🐛 Отладка: включена
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:45 - ✅ Все обработчики админ-панели успешно импортированы
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_dashboard_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_users_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_access_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_give_access_all_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_give_access_by_id_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_revoke_access_by_id_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ handle_user_id_input: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ handle_revoke_user_id_input: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_activity_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_refresh_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_broadcast_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_management_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_add_admin_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ admin_remove_admin_handler: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:68 - ✅ handle_admin_id_input: корректная функция
+2025-09-30 09:41:28 | INFO     | __main__:test_admin_handlers:74 - ✅ register_handlers успешно импортирован
