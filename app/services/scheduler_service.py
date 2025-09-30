@@ -167,6 +167,14 @@ class SchedulerService:
                 name='Публикация еженедельных отчетов'
             )
             
+            # Проверка подписок и исключение неоплативших (каждые 30 минут)
+            self.scheduler.add_job(
+                self.check_subscriptions_and_kick_unpaid,
+                IntervalTrigger(minutes=30),
+                id='check_subscriptions_and_kick',
+                name='Проверка подписок и исключение неоплативших'
+            )
+            
             logger.info("Планировщик задач настроен")
             
         except Exception as e:
@@ -339,6 +347,25 @@ class SchedulerService:
                 
         except Exception as e:
             logger.error(f"Ошибка при отправке напоминаний о подписке: {e}")
+    
+    async def check_subscriptions_and_kick_unpaid(self) -> None:
+        """Проверка подписок и исключение неоплативших пользователей."""
+        try:
+            logger.info("🔍 Начинаем проверку подписок участников группы...")
+            
+            # Импортируем GroupManagementService
+            from app.services.group_management_service import GroupManagementService
+            
+            group_service = GroupManagementService(self.bot)
+            results = await group_service.check_subscriptions_and_kick_unpaid()
+            
+            logger.info(f"✅ Проверка подписок завершена: {results['total_checked']} проверено, "
+                       f"{results['warnings_sent']} предупреждений отправлено, "
+                       f"{results['kicked_users']} пользователей исключено, "
+                       f"{results['errors']} ошибок")
+            
+        except Exception as e:
+            logger.error(f"Ошибка при проверке подписок: {e}")
     
     def start(self) -> None:
         """Запуск планировщика."""

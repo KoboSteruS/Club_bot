@@ -537,3 +537,16 @@ class UserService:
                 "total": 0, "active": 0, "inactive": 0, "banned": 0,
                 "new_today": 0, "new_week": 0, "new_month": 0, "activity_rate": 0
             }
+    
+    async def get_users_in_group(self) -> List[User]:
+        """Получить всех пользователей, которые находятся в группе."""
+        try:
+            result = await self.session.execute(
+                select(User)
+                .where(User.is_in_group == True)
+                .order_by(User.created_at.desc())
+            )
+            return list(result.scalars().all())
+        except Exception as e:
+            logger.error(f"Ошибка получения пользователей в группе: {e}")
+            return []

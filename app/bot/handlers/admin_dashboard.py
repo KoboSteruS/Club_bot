@@ -100,6 +100,7 @@ async def admin_dashboard_handler(update: Update, context: ContextTypes.DEFAULT_
                 [InlineKeyboardButton("👥 Пользователи", callback_data="admin_users")],
                 [InlineKeyboardButton("🔑 Выдача доступа", callback_data="admin_access")],
                 [InlineKeyboardButton("👑 Управление админами", callback_data="admin_management")],
+                [InlineKeyboardButton("🚫 Проверить подписки", callback_data="admin_check_subscriptions")],
                 [InlineKeyboardButton("📈 Активность", callback_data="admin_activity")],
                 [InlineKeyboardButton("🔄 Обновить", callback_data="admin_refresh")],
                 [InlineKeyboardButton("📢 Рассылка", callback_data="admin_broadcast")]
@@ -928,3 +929,73 @@ async def handle_remove_admin_id_input(update: Update, context: ContextTypes.DEF
         logger.error(f"Ошибка в handle_remove_admin_id_input: {e}")
         await update.message.reply_text("❌ Произошла ошибка при удалении администратора.")
         context.user_data['waiting_for_remove_admin_id'] = False
+
+
+async def admin_check_subscriptions_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик проверки подписок участников группы."""
+    try:
+        query = update.callback_query
+        await query.answer("🔍 Проверяем подписки...")
+        
+        # Показываем сообщение о начале проверки
+        await query.edit_message_text(
+            "🔍 <b>Проверка подписок участников группы</b>\n\n"
+            "⏳ Идет проверка всех участников...\n"
+            "📤 Отправка предупреждений неоплатившим...\n"
+            "⏰ Планирование исключений через 30 минут...",
+            parse_mode='HTML'
+        )
+        
+        # Импортируем сервис управления группой
+        from app.services.group_management_service import GroupManagementService
+        
+        # Получаем бота из контекста
+        bot = context.bot
+        group_service = GroupManagementService(bot)
+        
+        # Выполняем проверку
+        results = await group_service.check_subscriptions_and_kick_unpaid()
+        
+        # Формируем отчет
+        report_message = f"""✅ <b>Проверка подписок завершена!</b>
+
+📊 <b>Результаты:</b>
+• 👥 Проверено участников: {results['total_checked']}
+• ⚠️ Отправлено предупреждений: {results['warnings_sent']}
+• 🚫 Исключено пользователей: {results['kicked_users']}
+• ❌ Ошибок: {results['errors']}
+
+📋 <b>Детали:</b>"""
+
+        # Добавляем детали
+        if results['details']:
+            for detail in results['details'][:10]:  # Показываем первые 10
+                if detail.get('action') == 'warning_sent':
+                    report_message += f"\n• ⚠️ Предупреждение: @{detail.get('username', 'unknown')} (ID: {detail['user_id']})"
+                elif detail.get('action') == 'error':
+                    report_message += f"\n• ❌ Ошибка: {detail['message']}"
+        
+        if len(results['details']) > 10:
+            report_message += f"\n• ... и еще {len(results['details']) - 10} записей"
+        
+        report_message += f"""
+
+⏰ <b>Следующая проверка:</b> через 30 минут
+🔄 <b>Автоматическая проверка:</b> каждые 30 минут
+
+💡 <b>Важно:</b>
+• Пользователи получат 30 минут на оплату
+• Исключение произойдет автоматически
+• Можно добавить обратно через админ-панель"""
+
+        # Создаем клавиатуру
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔄 Проверить еще раз", callback_data="admin_check_subscriptions")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="admin_back")]
+        ])
+        
+        await query.edit_message_text(report_message, reply_markup=keyboard, parse_mode='HTML')
+        
+    except Exception as e:
+        logger.error(f"Ошибка в admin_check_subscriptions_handler: {e}")
+        await query.edit_message_text("❌ Произошла ошибка при проверке подписок.")

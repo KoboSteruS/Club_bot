@@ -571,7 +571,49 @@ class TelegramService:
         ])
         
         return await self.send_message(user_id, message, keyboard)
-
-
-
-
+    
+    async def kick_chat_member(self, chat_id: int, user_id: int) -> bool:
+        """
+        Исключает пользователя из группы.
+        
+        Args:
+            chat_id: ID чата
+            user_id: ID пользователя для исключения
+            
+        Returns:
+            bool: True если пользователь исключен успешно
+        """
+        try:
+            await self.bot.ban_chat_member(chat_id=chat_id, user_id=user_id)
+            logger.info(f"✅ Пользователь {user_id} исключен из группы {chat_id}")
+            return True
+            
+        except TelegramError as e:
+            logger.error(f"Ошибка исключения пользователя {user_id} из группы {chat_id}: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Неожиданная ошибка при исключении пользователя {user_id}: {e}")
+            return False
+    
+    async def unban_chat_member(self, chat_id: int, user_id: int) -> bool:
+        """
+        Разбанивает пользователя в группе (добавляет обратно).
+        
+        Args:
+            chat_id: ID чата
+            user_id: ID пользователя для разбана
+            
+        Returns:
+            bool: True если пользователь разбанен успешно
+        """
+        try:
+            await self.bot.unban_chat_member(chat_id=chat_id, user_id=user_id)
+            logger.info(f"✅ Пользователь {user_id} разбанен в группе {chat_id}")
+            return True
+            
+        except TelegramError as e:
+            logger.error(f"Ошибка разбана пользователя {user_id} в группе {chat_id}: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Неожиданная ошибка при разбане пользователя {user_id}: {e}")
+            return False

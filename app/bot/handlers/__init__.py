@@ -26,7 +26,8 @@ from .admin_dashboard import (
     admin_management_handler,
     admin_add_admin_handler,
     admin_remove_admin_handler,
-    handle_admin_id_input
+    handle_admin_id_input,
+    admin_check_subscriptions_handler
 )
 from .group_info import group_info_handler
 from .group_activity import (
@@ -64,6 +65,7 @@ def register_handlers(application: Application) -> None:
         application.add_handler(CallbackQueryHandler(admin_activity_handler, pattern="^admin_activity"))
         application.add_handler(CallbackQueryHandler(admin_refresh_handler, pattern="^admin_refresh"))
         application.add_handler(CallbackQueryHandler(admin_broadcast_handler, pattern="^admin_broadcast"))
+        application.add_handler(CallbackQueryHandler(admin_check_subscriptions_handler, pattern="^admin_check_subscriptions"))
         
         # Обработчики активности в группе (должны быть ПЕРВЫМИ!)
         application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, group_member_handler_func))
