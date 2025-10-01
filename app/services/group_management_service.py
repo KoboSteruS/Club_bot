@@ -39,14 +39,14 @@ class GroupManagementService:
                 group_members = await user_service.get_users_in_group()
                 logger.info(f"👥 Найдено {len(group_members)} участников в группе")
                 
-        results = {
-            "total_checked": len(group_members),
-            "warnings_sent": 0,
-            "warnings_failed": 0,
-            "kicked_users": 0,
-            "errors": 0,
-            "details": []
-        }
+                results = {
+                    "total_checked": len(group_members),
+                    "warnings_sent": 0,
+                    "warnings_failed": 0,
+                    "kicked_users": 0,
+                    "errors": 0,
+                    "details": []
+                }
                 
                 for user in group_members:
                     try:
