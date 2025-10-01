@@ -80,6 +80,7 @@ def register_handlers(application: Application) -> None:
             application.add_handler(MessageHandler(group_filter, group_message_handler_func))
         
         # Личные сообщения пользователей (работают всегда)
+        # ВАЖНО: Порядок имеет значение! Сначала обрабатываем админские команды, потом общие
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_id_input))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_id_input))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, start_handler))

@@ -375,6 +375,7 @@ async def admin_give_access_by_id_handler(update: Update, context: ContextTypes.
         
         # Сохраняем состояние для ожидания ввода ID
         context.user_data['waiting_for_user_id'] = True
+        logger.info(f"✅ Установлено состояние waiting_for_user_id=True для пользователя {user_id}")
         
     except Exception as e:
         logger.error(f"Ошибка в admin_give_access_by_id_handler: {e}")
@@ -384,9 +385,15 @@ async def admin_give_access_by_id_handler(update: Update, context: ContextTypes.
 async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обработчик ввода ID пользователя для выдачи доступа."""
     try:
+        logger.info(f"🔍 handle_user_id_input вызван для пользователя {update.effective_user.id}")
+        logger.info(f"   Состояние: waiting_for_user_id={context.user_data.get('waiting_for_user_id', False)}")
+        logger.info(f"   Состояние: waiting_for_revoke_user_id={context.user_data.get('waiting_for_revoke_user_id', False)}")
+        logger.info(f"   Сообщение: {update.message.text}")
+        
         # Проверяем, ожидаем ли мы ввод ID для выдачи или отмены доступа
         if not (context.user_data.get('waiting_for_user_id', False) or 
                 context.user_data.get('waiting_for_revoke_user_id', False)):
+            logger.info("   ❌ Не ожидаем ввод ID, пропускаем")
             return
         
         # Если ожидаем отмену доступа, вызываем соответствующий обработчик
