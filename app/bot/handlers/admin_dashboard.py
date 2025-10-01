@@ -423,13 +423,64 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
             target_user = await user_service.get_user_by_telegram_id(target_user_id)
             
             if not target_user:
-                await update.message.reply_text(
-                    f"❌ Пользователь с ID <code>{target_user_id}</code> не найден в базе данных.\n\n"
-                    "Убедитесь, что пользователь хотя бы раз писал боту.",
-                    parse_mode='HTML'
-                )
-                context.user_data['waiting_for_user_id'] = False
-                return
+                # Пользователь не найден в базе - попробуем создать его
+                logger.info(f"Пользователь {target_user_id} не найден в базе, пытаемся создать...")
+                
+                try:
+                    # Получаем информацию о пользователе через Telegram API
+                    from app.services.telegram_service import TelegramService
+                    telegram_service = TelegramService(context.bot)
+                    
+                    # Проверяем, есть ли пользователь в группе
+                    try:
+                        chat_member = await context.bot.get_chat_member(
+                            chat_id=int(settings.GROUP_ID),
+                            user_id=target_user_id
+                        )
+                        
+                        if chat_member.status in ['left', 'kicked']:
+                            await update.message.reply_text(
+                                f"❌ Пользователь с ID <code>{target_user_id}</code> не находится в группе.\n\n"
+                                "Сначала добавьте пользователя в группу, затем выдайте доступ.",
+                                parse_mode='HTML'
+                            )
+                            context.user_data['waiting_for_user_id'] = False
+                            return
+                        
+                        # Пользователь в группе - создаем запись в базе
+                        from app.schemas.user import UserCreate
+                        from datetime import datetime
+                        
+                        user_data = UserCreate(
+                            telegram_id=target_user_id,
+                            username=chat_member.user.username,
+                            first_name=chat_member.user.first_name or "Неизвестно",
+                            last_name=chat_member.user.last_name,
+                            status="pending"  # Сначала pending, потом станет active
+                        )
+                        
+                        target_user = await user_service.create_user(user_data)
+                        logger.info(f"Создан новый пользователь {target_user_id} (@{target_user.username})")
+                        
+                    except Exception as e:
+                        logger.error(f"Ошибка получения информации о пользователе {target_user_id}: {e}")
+                        await update.message.reply_text(
+                            f"❌ Не удалось получить информацию о пользователе с ID <code>{target_user_id}</code>.\n\n"
+                            "Убедитесь, что ID правильный и пользователь есть в группе.",
+                            parse_mode='HTML'
+                        )
+                        context.user_data['waiting_for_user_id'] = False
+                        return
+                        
+                except Exception as e:
+                    logger.error(f"Ошибка создания пользователя {target_user_id}: {e}")
+                    await update.message.reply_text(
+                        f"❌ Ошибка создания пользователя с ID <code>{target_user_id}</code>.\n\n"
+                        "Попробуйте еще раз или обратитесь к разработчику.",
+                        parse_mode='HTML'
+                    )
+                    context.user_data['waiting_for_user_id'] = False
+                    return
             
             # Выдаем доступ
             from datetime import datetime, timedelta
@@ -443,11 +494,21 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
                 subscription_until=subscription_until
             ))
             
+            # Проверяем, был ли пользователь создан или уже существовал
+            was_created = target_user.status == "pending" and target_user.is_premium == False
+            
             success_message = f"""✅ <b>Доступ выдан успешно!</b>
 
-👤 <b>Пользователь:</b> {target_user.first_name}
+👤 <b>Пользователь:</b> {target_user.first_name}"""
+            
+            if target_user.username:
+                success_message += f" (@{target_user.username})"
+                
+            success_message += f"""
 🆔 <b>ID:</b> <code>{target_user.telegram_id}</code>
 📅 <b>Подписка до:</b> {subscription_until.strftime('%d.%m.%Y %H:%M')}
+
+{"🆕 Пользователь создан и получил доступ" if was_created else "✅ Доступ обновлен"}
 
 Пользователь теперь имеет доступ к функциям клуба."""
             
