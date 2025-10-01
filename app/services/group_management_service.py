@@ -48,7 +48,8 @@ class GroupManagementService:
                     "details": []
                 }
                 
-                for user in group_members:
+                for i, user in enumerate(group_members, 1):
+                    logger.info(f"🔄 Обрабатываем пользователя {i}/{len(group_members)}: {user.telegram_id} (@{user.username})")
                     try:
                         await self._process_user_subscription(user, user_service, results)
                     except Exception as e:
@@ -76,6 +77,9 @@ class GroupManagementService:
     async def _process_user_subscription(self, user, user_service: UserService, results: Dict[str, Any]) -> None:
         """Обрабатывает подписку конкретного пользователя."""
         
+        logger.info(f"🔍 Проверяем пользователя {user.telegram_id} (@{user.username})")
+        logger.info(f"   Статус: {user.status}, Premium: {user.is_premium}, Подписка до: {user.subscription_until}")
+        
         # Проверяем, есть ли активная подписка
         has_active_subscription = (
             user.status == "active" and 
@@ -85,10 +89,12 @@ class GroupManagementService:
         )
         
         if has_active_subscription:
-            logger.debug(f"✅ Пользователь {user.telegram_id} имеет активную подписку")
+            logger.info(f"✅ Пользователь {user.telegram_id} (@{user.username}) имеет активную подписку")
             return
         
         # Если пользователь не оплатил, отправляем предупреждение
+        logger.warning(f"⚠️ Пользователь {user.telegram_id} (@{user.username}) НЕ ОПЛАЧИВАЛ - отправляем предупреждение")
+        
         warning_sent = await self._send_payment_warning(user)
         if warning_sent:
             results["warnings_sent"] += 1
@@ -106,6 +112,7 @@ class GroupManagementService:
             })
         
         # Планируем исключение через 30 минут
+        logger.info(f"⏰ Планируем исключение пользователя {user.telegram_id} через 30 минут")
         await self._schedule_user_kick(user.telegram_id)
     
     async def _send_payment_warning(self, user) -> bool:
