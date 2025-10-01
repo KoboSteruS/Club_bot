@@ -1,0 +1,6 @@
+● clubbot.service - Telegram Club Bot
+     Loaded: loaded (]8;;file://vjaceslavs.scukins.fvds.ru/etc/systemd/system/clubbot.service/etc/systemd/system/clubbot.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: activating (auto-restart) (Result: exit-code) since Tue 2025-09-23 13:12:37 MSK; 4s ago
+    Process: 456593 ExecStart=/root/Club_bot/env_clubbot/bin/python /root/Club_bot/main.py [0;1;31m(code=exited, status=1/FAILURE)[0m
+   Main PID: 456593 (code=exited, status=1/FAILURE)
+        CPU: 948ms
