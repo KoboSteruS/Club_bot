@@ -39,13 +39,14 @@ class GroupManagementService:
                 group_members = await user_service.get_users_in_group()
                 logger.info(f"👥 Найдено {len(group_members)} участников в группе")
                 
-                results = {
-                    "total_checked": len(group_members),
-                    "warnings_sent": 0,
-                    "kicked_users": 0,
-                    "errors": 0,
-                    "details": []
-                }
+        results = {
+            "total_checked": len(group_members),
+            "warnings_sent": 0,
+            "warnings_failed": 0,
+            "kicked_users": 0,
+            "errors": 0,
+            "details": []
+        }
                 
                 for user in group_members:
                     try:
@@ -88,18 +89,26 @@ class GroupManagementService:
             return
         
         # Если пользователь не оплатил, отправляем предупреждение
-        await self._send_payment_warning(user)
-        results["warnings_sent"] += 1
-        results["details"].append({
-            "user_id": user.telegram_id,
-            "action": "warning_sent",
-            "username": user.username
-        })
+        warning_sent = await self._send_payment_warning(user)
+        if warning_sent:
+            results["warnings_sent"] += 1
+            results["details"].append({
+                "user_id": user.telegram_id,
+                "action": "warning_sent",
+                "username": user.username
+            })
+        else:
+            results["warnings_failed"] += 1
+            results["details"].append({
+                "user_id": user.telegram_id,
+                "action": "warning_failed",
+                "username": user.username
+            })
         
         # Планируем исключение через 30 минут
         await self._schedule_user_kick(user.telegram_id)
     
-    async def _send_payment_warning(self, user) -> None:
+    async def _send_payment_warning(self, user) -> bool:
         """Отправляет предупреждение о необходимости оплаты."""
         try:
             warning_message = f"""⚠️ <b>ВНИМАНИЕ!</b>
@@ -134,12 +143,15 @@ class GroupManagementService:
             )
             
             if sent:
-                logger.info(f"📤 Предупреждение отправлено пользователю {user.telegram_id}")
+                logger.info(f"📤 Предупреждение отправлено пользователю {user.telegram_id} (@{user.username})")
+                return True
             else:
-                logger.warning(f"❌ Не удалось отправить предупреждение пользователю {user.telegram_id}")
+                logger.warning(f"❌ Не удалось отправить предупреждение пользователю {user.telegram_id} (@{user.username}) - возможно, пользователь не начинал диалог с ботом")
+                return False
                 
         except Exception as e:
             logger.error(f"Ошибка отправки предупреждения пользователю {user.telegram_id}: {e}")
+            return False
     
     async def _schedule_user_kick(self, telegram_id: int) -> None:
         """Планирует исключение пользователя через 30 минут."""

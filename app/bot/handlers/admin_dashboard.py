@@ -983,8 +983,9 @@ async def admin_check_subscriptions_handler(update: Update, context: ContextType
 📊 <b>Результаты:</b>
 • 👥 Проверено участников: {results['total_checked']}
 • ⚠️ Отправлено предупреждений: {results['warnings_sent']}
+• ❌ Не удалось отправить: {results['warnings_failed']}
 • 🚫 Исключено пользователей: {results['kicked_users']}
-• ❌ Ошибок: {results['errors']}
+• 🔧 Ошибок: {results['errors']}
 
 📋 <b>Детали:</b>"""
 
@@ -993,8 +994,10 @@ async def admin_check_subscriptions_handler(update: Update, context: ContextType
             for detail in results['details'][:10]:  # Показываем первые 10
                 if detail.get('action') == 'warning_sent':
                     report_message += f"\n• ⚠️ Предупреждение: @{detail.get('username', 'unknown')} (ID: {detail['user_id']})"
+                elif detail.get('action') == 'warning_failed':
+                    report_message += f"\n• ❌ Не отправлено: @{detail.get('username', 'unknown')} (ID: {detail['user_id']})"
                 elif detail.get('action') == 'error':
-                    report_message += f"\n• ❌ Ошибка: {detail['message']}"
+                    report_message += f"\n• 🔧 Ошибка: {detail['message']}"
         
         if len(results['details']) > 10:
             report_message += f"\n• ... и еще {len(results['details']) - 10} записей"
@@ -1007,7 +1010,12 @@ async def admin_check_subscriptions_handler(update: Update, context: ContextType
 💡 <b>Важно:</b>
 • Пользователи получат 30 минут на оплату
 • Исключение произойдет автоматически
-• Можно добавить обратно через админ-панель"""
+• Можно добавить обратно через админ-панель
+
+📝 <b>Примечание:</b>
+• "Не удалось отправить" = пользователь не начинал диалог с ботом
+• Это нормальное поведение Telegram API
+• Пользователь все равно будет исключен через 30 минут"""
 
         # Создаем клавиатуру
         keyboard = InlineKeyboardMarkup([
