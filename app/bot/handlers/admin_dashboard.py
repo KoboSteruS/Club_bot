@@ -898,6 +898,8 @@ async def handle_admin_id_input(update: Update, context: ContextTypes.DEFAULT_TY
         logger.info(f"🔍 handle_admin_id_input вызван для пользователя {update.effective_user.id}")
         logger.info(f"   Состояние: waiting_for_add_admin_id={context.user_data.get('waiting_for_add_admin_id', False)}")
         logger.info(f"   Состояние: waiting_for_remove_admin_id={context.user_data.get('waiting_for_remove_admin_id', False)}")
+        logger.info(f"   Состояние: waiting_for_user_id={context.user_data.get('waiting_for_user_id', False)}")
+        logger.info(f"   Состояние: waiting_for_revoke_user_id={context.user_data.get('waiting_for_revoke_user_id', False)}")
         logger.info(f"   Сообщение: {update.message.text}")
         
         # Проверяем, ожидаем ли мы ввод ID для добавления админа
@@ -910,7 +912,13 @@ async def handle_admin_id_input(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_remove_admin_id_input(update, context)
             return
         
-        logger.info("   ❌ Не ожидаем ввод ID администратора, пропускаем")
+        # Проверяем, ожидаем ли мы ввод ID для выдачи или отмены доступа пользователю
+        if context.user_data.get('waiting_for_user_id', False) or context.user_data.get('waiting_for_revoke_user_id', False):
+            logger.info("   ✅ Перенаправляем на handle_user_id_input")
+            await handle_user_id_input(update, context)
+            return
+        
+        logger.info("   ❌ Не ожидаем ввод ID, пропускаем")
             
     except Exception as e:
         logger.error(f"Ошибка в handle_admin_id_input: {e}")
