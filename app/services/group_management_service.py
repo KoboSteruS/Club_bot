@@ -128,8 +128,8 @@ class GroupManagementService:
 
             # Отправляем сообщение в личные сообщения
             sent = await self.telegram_service.send_message(
-                chat_id=user.telegram_id,
-                text=warning_message,
+                user.telegram_id,
+                warning_message,
                 parse_mode='HTML'
             )
             
