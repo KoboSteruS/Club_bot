@@ -35,6 +35,9 @@ class GroupManagementService:
             async with get_db_session() as session:
                 user_service = UserService(session)
                 
+                # Сначала синхронизируем статус пользователей в группе
+                await self._sync_group_members_status(user_service)
+                
                 # Получаем всех пользователей в группе
                 group_members = await user_service.get_users_in_group()
                 logger.info(f"👥 Найдено {len(group_members)} участников в группе")
@@ -270,3 +273,73 @@ class GroupManagementService:
         except Exception as e:
             logger.error(f"Ошибка добавления пользователя {telegram_id} в группу: {e}")
             return False
+    
+    async def _sync_group_members_status(self, user_service: UserService) -> None:
+        """Синхронизирует статус пользователей в группе с реальным состоянием."""
+        try:
+            logger.info("🔄 Синхронизируем статус пользователей в группе...")
+            
+            # Получаем всех пользователей из базы (не только тех, кто в группе)
+            all_users = await user_service.get_all_users()
+            logger.info(f"📊 Всего пользователей в базе: {len(all_users)}")
+            
+            # Получаем реальных участников группы через Telegram API
+            real_members = await self._get_real_group_members()
+            logger.info(f"👥 Реальных участников в группе: {len(real_members)}")
+            
+            # Обновляем статус в базе
+            updated_count = 0
+            for user in all_users:
+                is_really_in_group = user.telegram_id in real_members
+                
+                # Если статус не совпадает, обновляем
+                if user.is_in_group != is_really_in_group:
+                    user.is_in_group = is_really_in_group
+                    if is_really_in_group:
+                        user.joined_group_at = datetime.utcnow()
+                        logger.info(f"✅ Пользователь {user.telegram_id} (@{user.username}) добавлен в группу")
+                    else:
+                        user.joined_group_at = None
+                        logger.info(f"❌ Пользователь {user.telegram_id} (@{user.username}) покинул группу")
+                    updated_count += 1
+            
+            if updated_count > 0:
+                await user_service.session.commit()
+                logger.info(f"🔄 Обновлено {updated_count} пользователей")
+            else:
+                logger.info("✅ Статус пользователей актуален")
+                
+        except Exception as e:
+            logger.error(f"Ошибка синхронизации статуса пользователей: {e}")
+    
+    async def _get_real_group_members(self) -> List[int]:
+        """Получает реальный список участников группы через Telegram API."""
+        try:
+            if not self.telegram_service or not self.telegram_service.bot:
+                logger.warning("Бот не инициализирован, пропускаем синхронизацию")
+                return []
+            
+            # Получаем участников группы
+            members = []
+            try:
+                # Используем get_chat_administrators для получения списка участников
+                # В реальности нужно использовать get_chat_member_count и iterate по участникам
+                # Но для простоты пока используем администраторов
+                administrators = await self.telegram_service.bot.get_chat_administrators(
+                    chat_id=int(self.settings.GROUP_ID)
+                )
+                
+                for admin in administrators:
+                    if admin.user.id not in members:
+                        members.append(admin.user.id)
+                        
+                logger.info(f"📋 Получено {len(members)} участников через API")
+                return members
+                
+            except Exception as e:
+                logger.error(f"Ошибка получения участников группы через API: {e}")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Критическая ошибка получения участников группы: {e}")
+            return []

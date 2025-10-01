@@ -550,3 +550,14 @@ class UserService:
         except Exception as e:
             logger.error(f"Ошибка получения пользователей в группе: {e}")
             return []
+    
+    async def get_all_users(self) -> List[User]:
+        """Получить всех пользователей из базы данных."""
+        try:
+            result = await self.session.execute(
+                select(User).order_by(User.created_at.desc())
+            )
+            return list(result.scalars().all())
+        except Exception as e:
+            logger.error(f"Ошибка получения всех пользователей: {e}")
+            return []
