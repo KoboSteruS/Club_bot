@@ -117,6 +117,32 @@ class GroupManagementService:
             logger.info(f"✅ Пользователь {user.telegram_id} (@{user.username}) имеет активную подписку")
             return
         
+        # ВАЖНО: Проверяем, действительно ли пользователь в группе
+        if not user.is_in_group:
+            logger.info(f"ℹ️ Пользователь {user.telegram_id} (@{user.username}) не в группе (is_in_group=False), пропускаем")
+            return
+        
+        # Дополнительная проверка через Telegram API
+        try:
+            if self.telegram_service and self.telegram_service.bot:
+                chat_member = await self.telegram_service.bot.get_chat_member(
+                    chat_id=int(self.settings.GROUP_ID),
+                    user_id=user.telegram_id
+                )
+                
+                if chat_member.status in ['left', 'kicked']:
+                    logger.info(f"ℹ️ Пользователь {user.telegram_id} (@{user.username}) покинул группу (статус: {chat_member.status}), обновляем базу и пропускаем")
+                    
+                    # Обновляем статус в базе данных
+                    user.is_in_group = False
+                    user.joined_group_at = None
+                    await user_service.session.commit()
+                    return
+                    
+        except Exception as e:
+            logger.warning(f"⚠️ Не удалось проверить статус пользователя {user.telegram_id} в группе: {e}")
+            # Продолжаем обработку, если не можем проверить через API
+        
         # Если пользователь не оплатил, отправляем предупреждение
         logger.warning(f"⚠️ Пользователь {user.telegram_id} (@{user.username}) НЕ ОПЛАЧИВАЛ - отправляем предупреждение")
         
@@ -191,19 +217,29 @@ class GroupManagementService:
         """Планирует исключение пользователя через 30 минут."""
         try:
             logger.info(f"⏳ Запущена задача исключения для пользователя {telegram_id} - ожидание 30 минут...")
+            
             # Ждем 30 минут
+            logger.info(f"⏰ Ожидание 30 минут для пользователя {telegram_id}...")
             await asyncio.sleep(30 * 60)  # 30 минут в секундах
+            
             logger.info(f"⏰ Время ожидания истекло для пользователя {telegram_id} - проверяем оплату...")
             
             # Проверяем, оплатил ли пользователь за это время
-            await self._kick_user_if_unpaid(telegram_id)
+            result = await self._kick_user_if_unpaid(telegram_id)
+            
+            if result:
+                logger.info(f"✅ Пользователь {telegram_id} успешно исключен из группы")
+            else:
+                logger.warning(f"⚠️ Пользователь {telegram_id} НЕ был исключен - возможно, уже оплатил или произошла ошибка")
             
         except Exception as e:
             logger.error(f"Ошибка при планировании исключения пользователя {telegram_id}: {e}")
     
-    async def _kick_user_if_unpaid(self, telegram_id: int) -> None:
+    async def _kick_user_if_unpaid(self, telegram_id: int) -> bool:
         """Исключает пользователя, если он не оплатил."""
         try:
+            logger.info(f"🔍 Проверяем статус оплаты для пользователя {telegram_id} перед исключением...")
+            
             async with get_db_session() as session:
                 user_service = UserService(session)
                 
@@ -211,8 +247,10 @@ class GroupManagementService:
                 user = await user_service.get_user_by_telegram_id(telegram_id)
                 
                 if not user:
-                    logger.warning(f"Пользователь {telegram_id} не найден в базе данных")
-                    return
+                    logger.warning(f"❌ Пользователь {telegram_id} не найден в базе данных")
+                    return False
+                
+                logger.info(f"📊 Статус пользователя {telegram_id}: {user.status}, Premium: {user.is_premium}, Подписка до: {user.subscription_until}")
                 
                 # Проверяем, оплатил ли пользователь за это время
                 has_active_subscription = (
@@ -224,24 +262,34 @@ class GroupManagementService:
                 
                 if has_active_subscription:
                     logger.info(f"✅ Пользователь {telegram_id} оплатил подписку, исключение отменено")
-                    return
+                    return False
+                
+                logger.info(f"❌ Пользователь {telegram_id} не оплатил, исключаем из группы...")
                 
                 # Исключаем пользователя из группы
-                await self._kick_user_from_group(telegram_id)
+                result = await self._kick_user_from_group(telegram_id)
                 
-                # Обновляем статус в базе данных
-                from app.schemas.user import UserUpdate
-                await user_service.update_user(str(user.id), UserUpdate(
-                    is_in_group=False,
-                    status="pending"
-                ))
-                
-                logger.info(f"🚫 Пользователь {telegram_id} исключен из группы")
+                if result:
+                    # Обновляем статус в базе данных
+                    from app.schemas.user import UserUpdate
+                    await user_service.update_user(str(user.id), UserUpdate(
+                        is_in_group=False,
+                        status="pending"
+                    ))
+                    
+                    logger.info(f"🚫 Пользователь {telegram_id} исключен из группы")
+                    return True
+                else:
+                    logger.error(f"❌ Не удалось исключить пользователя {telegram_id}")
+                    return False
                 
         except Exception as e:
-            logger.error(f"Ошибка при исключении пользователя {telegram_id}: {e}")
+            logger.error(f"❌ Ошибка при исключении пользователя {telegram_id}: {e}")
+            import traceback
+            logger.error(f"📋 Traceback: {traceback.format_exc()}")
+            return False
     
-    async def _kick_user_from_group(self, telegram_id: int) -> None:
+    async def _kick_user_from_group(self, telegram_id: int) -> bool:
         """Исключает пользователя из группы."""
         try:
             # Исключаем пользователя из группы
@@ -252,11 +300,14 @@ class GroupManagementService:
             
             if success:
                 logger.info(f"✅ Пользователь {telegram_id} успешно исключен из группы")
+                return True
             else:
-                logger.warning(f"❌ Не удалось исключить пользователя {telegram_id} из группы")
+                logger.error(f"❌ Не удалось исключить пользователя {telegram_id} через Telegram API")
+                return False
                 
         except Exception as e:
-            logger.error(f"Ошибка исключения пользователя {telegram_id} из группы: {e}")
+            logger.error(f"❌ Ошибка исключения пользователя {telegram_id} из группы: {e}")
+            return False
     
     async def add_user_to_group(self, telegram_id: int) -> bool:
         """
