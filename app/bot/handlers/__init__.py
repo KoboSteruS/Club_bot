@@ -81,9 +81,17 @@ def register_handlers(application: Application) -> None:
         
         # Личные сообщения пользователей (работают всегда)
         # ВАЖНО: Порядок имеет значение! Сначала обрабатываем админские команды, потом общие
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_id_input))
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_id_input))
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, start_handler))
+        
+        # Админские обработчики ввода ID (только для личных сообщений)
+        from config.settings import get_settings
+        settings = get_settings()
+        
+        # Фильтр для личных сообщений (не групповых)
+        private_filter = filters.TEXT & ~filters.COMMAND & ~filters.Chat(chat_id=int(settings.GROUP_ID)) if settings.GROUP_ID else filters.TEXT & ~filters.COMMAND
+        
+        application.add_handler(MessageHandler(private_filter, handle_admin_id_input))
+        application.add_handler(MessageHandler(private_filter, handle_user_id_input))
+        application.add_handler(MessageHandler(private_filter, start_handler))
         
         logger.info("✅ Все обработчики зарегистрированы")
         
