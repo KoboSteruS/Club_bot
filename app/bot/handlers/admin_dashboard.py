@@ -527,8 +527,8 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
                 
                 # Создаем сервисы для добавления в группу
                 settings = get_settings()
-                telegram_service = TelegramService(context.bot)
-                group_service = GroupManagementService(telegram_service, settings)
+                telegram_svc = TelegramService(context.bot)
+                group_service = GroupManagementService(telegram_svc, settings)
                 
                 # Автоматически добавляем пользователя в группу
                 added_to_group = await group_service.auto_add_paid_user_to_group(target_user.telegram_id)
