@@ -652,6 +652,10 @@ async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_T
                 button_text = chat_name[:20] + "..." if len(chat_name) > 20 else chat_name
                 keyboard_buttons.append([InlineKeyboardButton(f"💬 {button_text}", callback_data=f"admin_chat_activity_{chat_id}")])
             
+            # Если нет дополнительных чатов, добавляем только основную группу
+            if len(settings.all_chat_ids) == 1:
+                keyboard_buttons.append([InlineKeyboardButton("💬 Основная группа", callback_data=f"admin_chat_activity_{settings.GROUP_ID}")])
+            
             # Кнопка "Назад"
             keyboard_buttons.append([InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_dashboard")])
             
@@ -746,7 +750,8 @@ async def admin_chat_activity_handler(update: Update, context: ContextTypes.DEFA
             week_ago = (datetime.utcnow() - timedelta(days=7)).date()
             
             # Получаем статистику по конкретному чату
-            chat_stats = await activity_service.get_activity_stats_by_chat(chat_id, week_ago, today)
+            chat_stats_dict = await activity_service.get_activity_stats_by_chat(week_ago, today)
+            chat_stats = chat_stats_dict.get(chat_id, {})
             
             message = f"""📈 <b>Активность в чате: {chat_name}</b>
 
