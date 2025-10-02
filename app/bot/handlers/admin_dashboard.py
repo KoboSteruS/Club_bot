@@ -384,6 +384,9 @@ async def admin_give_access_by_id_handler(update: Update, context: ContextTypes.
 
 async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обработчик ввода ID пользователя для выдачи доступа."""
+    # Импортируем необходимые модули в начале функции
+    from app.services.group_management_service import GroupManagementService
+    
     try:
         logger.info(f"🔍 handle_user_id_input вызван для пользователя {update.effective_user.id}")
         logger.info(f"   Состояние: waiting_for_user_id={context.user_data.get('waiting_for_user_id', False)}")
@@ -523,8 +526,6 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
             
             # Автоматически добавляем пользователя в группу
             try:
-                from app.services.group_management_service import GroupManagementService
-                
                 # Создаем сервисы для добавления в группу
                 settings = get_settings()
                 group_service = GroupManagementService(TelegramService(context.bot), settings)
