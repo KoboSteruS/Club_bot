@@ -385,6 +385,10 @@ async def admin_give_access_by_id_handler(update: Update, context: ContextTypes.
 
 async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обработчик ввода ID пользователя для выдачи доступа."""
+    logger.info(f"🚀 НАЧАЛО handle_user_id_input для пользователя {update.effective_user.id}")
+    logger.info(f"🔧 Проверяем импорты - TelegramService доступен: {TelegramService is not None}")
+    logger.info(f"🔧 Проверяем импорты - GroupManagementService доступен: {GroupManagementService is not None}")
+    
     try:
         logger.info(f"🔍 handle_user_id_input вызван для пользователя {update.effective_user.id}")
         logger.info(f"   Состояние: waiting_for_user_id={context.user_data.get('waiting_for_user_id', False)}")
@@ -436,7 +440,6 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
                 
                 try:
                     # Получаем информацию о пользователе через Telegram API
-                    from app.services.telegram_service import TelegramService
                     telegram_service = TelegramService(context.bot)
                     
                     # Проверяем, есть ли пользователь в группе
@@ -524,12 +527,25 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
             
             # Автоматически добавляем пользователя в группу
             try:
+                logger.info(f"🔧 Начинаем автоматическое добавление пользователя {target_user.telegram_id} в группу")
+                
                 # Создаем сервисы для добавления в группу
+                logger.info(f"🔧 Получаем settings...")
                 settings = get_settings()
-                group_service = GroupManagementService(TelegramService(context.bot), settings)
+                logger.info(f"🔧 Settings получены: GROUP_ID={settings.GROUP_ID}")
+                
+                logger.info(f"🔧 Создаем TelegramService...")
+                telegram_service = TelegramService(context.bot)
+                logger.info(f"🔧 TelegramService создан успешно")
+                
+                logger.info(f"🔧 Создаем GroupManagementService...")
+                group_service = GroupManagementService(telegram_service, settings)
+                logger.info(f"🔧 GroupManagementService создан успешно")
                 
                 # Автоматически добавляем пользователя в группу
+                logger.info(f"🔧 Вызываем auto_add_paid_user_to_group для пользователя {target_user.telegram_id}")
                 added_to_group = await group_service.auto_add_paid_user_to_group(target_user.telegram_id)
+                logger.info(f"🔧 auto_add_paid_user_to_group завершен, результат: {added_to_group}")
                 
                 if added_to_group:
                     await update.message.reply_text("✅ Пользователь автоматически добавлен в группу!", parse_mode='HTML')
@@ -539,7 +555,9 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
                     logger.warning(f"⚠️ Не удалось автоматически добавить пользователя {target_user.telegram_id} в группу через админ панель")
                 
             except Exception as e:
-                logger.error(f"Ошибка автоматического добавления пользователя {target_user.telegram_id} в группу через админ панель: {e}")
+                import traceback
+                logger.error(f"❌ Ошибка автоматического добавления пользователя {target_user.telegram_id} в группу через админ панель: {e}")
+                logger.error(f"❌ Traceback: {traceback.format_exc()}")
                 await update.message.reply_text("⚠️ Пользователь получил доступ, но произошла ошибка при добавлении в группу.", parse_mode='HTML')
             
             # Очищаем состояние
