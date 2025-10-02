@@ -652,10 +652,6 @@ async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_T
                 button_text = chat_name[:20] + "..." if len(chat_name) > 20 else chat_name
                 keyboard_buttons.append([InlineKeyboardButton(f"💬 {button_text}", callback_data=f"admin_chat_activity_{chat_id}")])
             
-            # Если нет дополнительных чатов, добавляем только основную группу
-            if len(settings.all_chat_ids) == 1:
-                keyboard_buttons.append([InlineKeyboardButton("💬 Основная группа", callback_data=f"admin_chat_activity_{settings.GROUP_ID}")])
-            
             # Кнопка "Назад"
             keyboard_buttons.append([InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_dashboard")])
             
