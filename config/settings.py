@@ -97,6 +97,11 @@ class Settings(BaseSettings):
     QUARTERLY_PRICE: int = Field(default=3300, env="QUARTERLY_PRICE")  # 33 доллара в рублях
     YEARLY_PRICE: int = Field(default=3300, env="YEARLY_PRICE")  # 33 доллара в рублях
     
+    # Настройки криптовалютных цен (в USDT)
+    CRYPTO_MONTHLY_PRICE: str = Field(default="33.00", env="CRYPTO_MONTHLY_PRICE")  # 33 USDT
+    CRYPTO_QUARTERLY_PRICE: str = Field(default="33.00", env="CRYPTO_QUARTERLY_PRICE")  # 33 USDT
+    CRYPTO_YEARLY_PRICE: str = Field(default="33.00", env="CRYPTO_YEARLY_PRICE")  # 33 USDT
+    
     # Настройки напоминаний
     RENEWAL_REMINDER_DAYS: int = Field(default=3, env="RENEWAL_REMINDER_DAYS")
     REPORT_REMINDER_HOUR: int = Field(default=21, env="REPORT_REMINDER_HOUR")
