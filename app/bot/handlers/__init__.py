@@ -22,6 +22,7 @@ from .admin_dashboard import (
     handle_revoke_user_id_input,
     admin_activity_handler,
     admin_activity_by_chats_handler,
+    admin_chat_activity_handler,
     admin_refresh_handler,
     admin_broadcast_handler,
     admin_management_handler,
@@ -67,6 +68,7 @@ def register_handlers(application: Application) -> None:
         application.add_handler(CallbackQueryHandler(admin_remove_admin_handler, pattern="^admin_remove_admin"))
         application.add_handler(CallbackQueryHandler(admin_activity_handler, pattern="^admin_activity"))
         application.add_handler(CallbackQueryHandler(admin_activity_by_chats_handler, pattern="^admin_activity_by_chats"))
+        application.add_handler(CallbackQueryHandler(admin_chat_activity_handler, pattern="^admin_chat_activity_"))
         application.add_handler(CallbackQueryHandler(admin_refresh_handler, pattern="^admin_refresh"))
         application.add_handler(CallbackQueryHandler(admin_broadcast_handler, pattern="^admin_broadcast"))
         application.add_handler(CallbackQueryHandler(admin_check_subscriptions_handler, pattern="^admin_check_subscriptions"))

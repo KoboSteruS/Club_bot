@@ -847,4 +847,42 @@ class ActivityService:
                 'message_types': {},
                 'top_users': []
             }
+    
+    async def get_top_active_users_for_chat(self, chat_id: str, days: int = 7, limit: int = 50) -> List[Dict]:
+        """Получить топ активных пользователей для конкретного чата."""
+        try:
+            start_date = (datetime.utcnow() - timedelta(days=days)).date()
+            
+            stmt = (
+                select(
+                    ChatActivity.user_id,
+                    User.first_name,
+                    User.username,
+                    func.count(ChatActivity.id).label('activity_count')
+                )
+                .join(User, ChatActivity.user_id == User.id)
+                .where(
+                    and_(
+                        ChatActivity.chat_id == chat_id,
+                        ChatActivity.activity_date >= start_date
+                    )
+                )
+                .group_by(ChatActivity.user_id, User.first_name, User.username)
+                .order_by(func.count(ChatActivity.id).desc())
+                .limit(limit)
+            )
+            
+            result = await self.session.execute(stmt)
+            return [
+                {
+                    'first_name': row.first_name,
+                    'username': row.username,
+                    'activity_count': row.activity_count
+                }
+                for row in result
+            ]
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения пользователей для чата {chat_id}: {e}")
+            return []
 
