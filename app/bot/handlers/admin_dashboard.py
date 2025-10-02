@@ -103,8 +103,9 @@ async def admin_dashboard_handler(update: Update, context: ContextTypes.DEFAULT_
                 [InlineKeyboardButton("👑 Управление админами", callback_data="admin_management")],
                 [InlineKeyboardButton("🚫 Проверить подписки", callback_data="admin_check_subscriptions")],
                 [InlineKeyboardButton("📈 Активность", callback_data="admin_activity")],
-                [InlineKeyboardButton("🔄 Обновить", callback_data="admin_refresh")],
-                [InlineKeyboardButton("📢 Рассылка", callback_data="admin_broadcast")]
+                [InlineKeyboardButton("📤 Отправить в группу", callback_data="admin_send_to_group")],
+                [InlineKeyboardButton("📢 Рассылка", callback_data="admin_broadcast")],
+                [InlineKeyboardButton("🔄 Обновить", callback_data="admin_refresh")]
             ])
             
             # Отправляем сообщение в зависимости от типа update
@@ -1146,3 +1147,118 @@ async def admin_check_subscriptions_handler(update: Update, context: ContextType
     except Exception as e:
         logger.error(f"Ошибка в admin_check_subscriptions_handler: {e}")
         await query.edit_message_text("❌ Произошла ошибка при проверке подписок.")
+
+
+async def admin_send_to_group_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик кнопки 'Отправить в группу' в админ-панели."""
+    try:
+        query = update.callback_query
+        await safe_answer_callback(query)
+        
+        settings = get_settings()
+        user_id = query.from_user.id
+        
+        if user_id not in settings.admin_ids_list:
+            await query.edit_message_text("❌ У вас нет прав администратора.")
+            return
+        
+        message = """📤 <b>Отправка сообщения в группу</b>
+
+Введите текст сообщения, которое будет отправлено в группу от лица бота.
+
+<b>Инструкции:</b>
+• Напишите текст сообщения в следующем сообщении
+• Поддерживается HTML разметка (жирный, курсив, ссылки)
+• Для отмены нажмите "Назад к панели"
+
+<b>Примеры разметки:</b>
+• <b>жирный текст</b>
+• <i>курсив</i>
+• <a href="https://example.com">ссылка</a>
+• <code>моноширинный</code>"""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_dashboard")]
+        ])
+        
+        await query.edit_message_text(message, reply_markup=keyboard, parse_mode='HTML')
+        
+        # Сохраняем состояние для ожидания ввода текста
+        context.user_data['waiting_for_group_message'] = True
+        
+    except Exception as e:
+        logger.error(f"Ошибка в admin_send_to_group_handler: {e}")
+        await query.edit_message_text("❌ Произошла ошибка при подготовке отправки сообщения.")
+
+
+async def handle_group_message_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик ввода текста для отправки в группу."""
+    try:
+        logger.info(f"🔍 handle_group_message_input вызван для пользователя {update.effective_user.id}")
+        
+        # Проверяем, ожидаем ли мы ввод сообщения для группы
+        if not context.user_data.get('waiting_for_group_message', False):
+            logger.info("   ❌ Не ожидаем ввод сообщения для группы, пропускаем")
+            return
+        
+        settings = get_settings()
+        user_id = update.effective_user.id
+        
+        if user_id not in settings.admin_ids_list:
+            await update.message.reply_text("❌ У вас нет прав администратора.")
+            context.user_data['waiting_for_group_message'] = False
+            return
+        
+        message_text = update.message.text.strip()
+        
+        if not message_text:
+            await update.message.reply_text("❌ Сообщение не может быть пустым. Попробуйте еще раз.")
+            return
+        
+        # Отправляем сообщение в группу
+        try:
+            telegram_service = TelegramService(context.bot)
+            
+            # Отправляем сообщение в группу
+            await telegram_service.bot.send_message(
+                chat_id=int(settings.GROUP_ID),
+                text=message_text,
+                parse_mode='HTML'
+            )
+            
+            success_message = f"""✅ <b>Сообщение отправлено в группу!</b>
+
+📝 <b>Текст:</b>
+{message_text}
+
+👤 <b>Отправил:</b> {update.effective_user.first_name}
+📅 <b>Время:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}
+
+Сообщение успешно доставлено всем участникам группы."""
+            
+            await update.message.reply_text(success_message, parse_mode='HTML')
+            
+            logger.info(f"✅ Админ {user_id} отправил сообщение в группу {settings.GROUP_ID}: {message_text[:50]}...")
+            
+        except Exception as e:
+            error_message = f"""❌ <b>Ошибка отправки сообщения</b>
+
+Не удалось отправить сообщение в группу.
+
+<b>Возможные причины:</b>
+• Бот не является администратором группы
+• Неверный ID группы
+• Техническая ошибка
+
+<b>Ошибка:</b> {str(e)}"""
+            
+            await update.message.reply_text(error_message, parse_mode='HTML')
+            logger.error(f"Ошибка отправки сообщения в группу: {e}")
+        
+        # Очищаем состояние
+        context.user_data['waiting_for_group_message'] = False
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_group_message_input: {e}")
+        await update.message.reply_text("❌ Произошла ошибка при обработке сообщения.")
+        context.user_data['waiting_for_group_message'] = False

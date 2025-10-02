@@ -4,7 +4,7 @@
 
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -23,7 +23,27 @@ class Settings(BaseSettings):
     # Настройки канала/группы
     CHANNEL_ID: str = Field(default="-1002612093078", env="CHANNEL_ID")  # ID группы "ЯДРО КЛУБА / ОСНОВА PUTИ"
     CHANNEL_USERNAME: str = Field(default="osnovaputi", env="CHANNEL_USERNAME")
-    GROUP_ID: str = Field(default="-1002612093078", env="GROUP_ID")  # ID группы клуба
+    GROUP_ID: str = Field(default="-1002612093078", env="GROUP_ID")  # ID основной группы клуба
+    
+    # Настройки дополнительных чатов для аналитики
+    ADDITIONAL_CHATS: str = Field(default="", env="ADDITIONAL_CHATS")  # ID дополнительных чатов через запятую
+    
+    @property
+    def all_chat_ids(self) -> List[str]:
+        """Получить список всех ID чатов для аналитики."""
+        chats = [self.GROUP_ID]
+        if self.ADDITIONAL_CHATS:
+            additional = [chat.strip() for chat in self.ADDITIONAL_CHATS.split(",") if chat.strip()]
+            chats.extend(additional)
+        return chats
+    
+    @property
+    def chat_names(self) -> Dict[str, str]:
+        """Получить названия чатов."""
+        return {
+            self.GROUP_ID: "Основная группа",
+            # Добавьте сюда дополнительные чаты по мере необходимости
+        }
     
     # Настройки админов
     ADMIN_IDS: str = Field(default="1670311707", env="ADMIN_IDS")

@@ -27,7 +27,9 @@ from .admin_dashboard import (
     admin_add_admin_handler,
     admin_remove_admin_handler,
     handle_admin_id_input,
-    admin_check_subscriptions_handler
+    admin_check_subscriptions_handler,
+    admin_send_to_group_handler,
+    handle_group_message_input
 )
 from .group_info import group_info_handler
 from .group_activity import (
@@ -66,6 +68,7 @@ def register_handlers(application: Application) -> None:
         application.add_handler(CallbackQueryHandler(admin_refresh_handler, pattern="^admin_refresh"))
         application.add_handler(CallbackQueryHandler(admin_broadcast_handler, pattern="^admin_broadcast"))
         application.add_handler(CallbackQueryHandler(admin_check_subscriptions_handler, pattern="^admin_check_subscriptions"))
+        application.add_handler(CallbackQueryHandler(admin_send_to_group_handler, pattern="^admin_send_to_group"))
         
         # Обработчики активности в группе (должны быть ПЕРВЫМИ!)
         application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, group_member_handler_func))
@@ -91,6 +94,7 @@ def register_handlers(application: Application) -> None:
         
         application.add_handler(MessageHandler(private_filter, handle_admin_id_input))
         application.add_handler(MessageHandler(private_filter, handle_user_id_input))
+        application.add_handler(MessageHandler(private_filter, handle_group_message_input))
         application.add_handler(MessageHandler(private_filter, start_handler))
         
         logger.info("✅ Все обработчики зарегистрированы")

@@ -668,4 +668,183 @@ class ActivityService:
         except Exception as e:
             logger.error(f"Ошибка получения статистики активности за период {start_date}-{end_date}: {e}")
             return {'messages': 0, 'active_users': 0}
+    
+    async def get_activity_stats_by_chat(self, start_date: date, end_date: date) -> Dict[str, Dict[str, Any]]:
+        """Получить статистику активности по чатам за период."""
+        try:
+            chat_stats = {}
+            
+            # Получаем список всех чатов из базы
+            chats_stmt = select(ChatActivity.chat_id).distinct()
+            chats_result = await self.session.execute(chats_stmt)
+            chat_ids = [row.chat_id for row in chats_result]
+            
+            for chat_id in chat_ids:
+                # Общая статистика по чату
+                stats_stmt = (
+                    select(
+                        func.count(ChatActivity.id).label('total_messages'),
+                        func.count(func.distinct(ChatActivity.user_id)).label('unique_users')
+                    )
+                    .where(
+                        and_(
+                            ChatActivity.chat_id == chat_id,
+                            ChatActivity.activity_date >= start_date,
+                            ChatActivity.activity_date <= end_date
+                        )
+                    )
+                )
+                
+                stats_result = await self.session.execute(stats_stmt)
+                stats_row = stats_result.first()
+                
+                # Статистика по типам сообщений
+                types_stmt = (
+                    select(
+                        ChatActivity.activity_type,
+                        func.count(ChatActivity.id).label('count')
+                    )
+                    .where(
+                        and_(
+                            ChatActivity.chat_id == chat_id,
+                            ChatActivity.activity_date >= start_date,
+                            ChatActivity.activity_date <= end_date
+                        )
+                    )
+                    .group_by(ChatActivity.activity_type)
+                )
+                
+                types_result = await self.session.execute(types_stmt)
+                message_types = {row.activity_type: row.count for row in types_result}
+                
+                # Топ пользователей в чате
+                users_stmt = (
+                    select(
+                        ChatActivity.user_id,
+                        User.first_name,
+                        User.username,
+                        func.count(ChatActivity.id).label('message_count')
+                    )
+                    .join(User, ChatActivity.user_id == User.id)
+                    .where(
+                        and_(
+                            ChatActivity.chat_id == chat_id,
+                            ChatActivity.activity_date >= start_date,
+                            ChatActivity.activity_date <= end_date
+                        )
+                    )
+                    .group_by(ChatActivity.user_id, User.first_name, User.username)
+                    .order_by(func.count(ChatActivity.id).desc())
+                    .limit(5)
+                )
+                
+                users_result = await self.session.execute(users_stmt)
+                top_users = [
+                    {
+                        'first_name': row.first_name,
+                        'username': row.username,
+                        'message_count': row.message_count
+                    }
+                    for row in users_result
+                ]
+                
+                chat_stats[chat_id] = {
+                    'total_messages': stats_row.total_messages,
+                    'unique_users': stats_row.unique_users,
+                    'message_types': message_types,
+                    'top_users': top_users
+                }
+            
+            return chat_stats
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения статистики по чатам: {e}")
+            return {}
+    
+    async def get_overall_activity_stats(self, start_date: date, end_date: date) -> Dict[str, Any]:
+        """Получить общую статистику активности по всем чатам."""
+        try:
+            # Общая статистика
+            stats_stmt = (
+                select(
+                    func.count(ChatActivity.id).label('total_messages'),
+                    func.count(func.distinct(ChatActivity.user_id)).label('unique_users'),
+                    func.count(func.distinct(ChatActivity.chat_id)).label('active_chats')
+                )
+                .where(
+                    and_(
+                        ChatActivity.activity_date >= start_date,
+                        ChatActivity.activity_date <= end_date
+                    )
+                )
+            )
+            
+            stats_result = await self.session.execute(stats_stmt)
+            stats_row = stats_result.first()
+            
+            # Общая статистика по типам сообщений
+            types_stmt = (
+                select(
+                    ChatActivity.activity_type,
+                    func.count(ChatActivity.id).label('count')
+                )
+                .where(
+                    and_(
+                        ChatActivity.activity_date >= start_date,
+                        ChatActivity.activity_date <= end_date
+                    )
+                )
+                .group_by(ChatActivity.activity_type)
+            )
+            
+            types_result = await self.session.execute(types_stmt)
+            message_types = {row.activity_type: row.count for row in types_result}
+            
+            # Общий топ пользователей
+            users_stmt = (
+                select(
+                    ChatActivity.user_id,
+                    User.first_name,
+                    User.username,
+                    func.count(ChatActivity.id).label('message_count')
+                )
+                .join(User, ChatActivity.user_id == User.id)
+                .where(
+                    and_(
+                        ChatActivity.activity_date >= start_date,
+                        ChatActivity.activity_date <= end_date
+                    )
+                )
+                .group_by(ChatActivity.user_id, User.first_name, User.username)
+                .order_by(func.count(ChatActivity.id).desc())
+                .limit(10)
+            )
+            
+            users_result = await self.session.execute(users_stmt)
+            top_users = [
+                {
+                    'first_name': row.first_name,
+                    'username': row.username,
+                    'message_count': row.message_count
+                }
+                for row in users_result
+            ]
+            
+            return {
+                'total_messages': stats_row.total_messages,
+                'unique_users': stats_row.unique_users,
+                'active_chats': stats_row.active_chats,
+                'message_types': message_types,
+                'top_users': top_users
+            }
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения общей статистики: {e}")
+            return {
+                'total_messages': 0,
+                'unique_users': 0,
+                'active_chats': 0,
+                'message_types': {},
+                'top_users': []
+            }
 
