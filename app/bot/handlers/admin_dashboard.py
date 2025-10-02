@@ -12,6 +12,7 @@ from app.services.user_service import UserService
 from app.services.payment_service import PaymentService
 from app.services.activity_service import ActivityService
 from app.services.telegram_service import TelegramService
+from app.services.group_management_service import GroupManagementService
 from config.settings import get_settings
 
 
@@ -384,9 +385,6 @@ async def admin_give_access_by_id_handler(update: Update, context: ContextTypes.
 
 async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обработчик ввода ID пользователя для выдачи доступа."""
-    # Импортируем необходимые модули в начале функции
-    from app.services.group_management_service import GroupManagementService
-    
     try:
         logger.info(f"🔍 handle_user_id_input вызван для пользователя {update.effective_user.id}")
         logger.info(f"   Состояние: waiting_for_user_id={context.user_data.get('waiting_for_user_id', False)}")
@@ -1072,9 +1070,6 @@ async def admin_check_subscriptions_handler(update: Update, context: ContextType
             "⏰ Планирование исключений через 30 минут...",
             parse_mode='HTML'
         )
-        
-        # Импортируем сервис управления группой
-        from app.services.group_management_service import GroupManagementService
         
         # Создаем сервисы
         settings = get_settings()
