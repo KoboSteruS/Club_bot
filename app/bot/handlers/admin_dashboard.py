@@ -958,6 +958,12 @@ async def handle_admin_id_input(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_user_id_input(update, context)
             return
         
+        # Проверяем, ожидаем ли мы ввод сообщения для группы
+        if context.user_data.get('waiting_for_group_message', False):
+            logger.info("   ✅ Перенаправляем на handle_group_message_input")
+            await handle_group_message_input(update, context)
+            return
+        
         logger.info("   ❌ Не ожидаем ввод ID, пропускаем")
             
     except Exception as e:
