@@ -76,6 +76,32 @@ async def process_cryptobot_webhook(webhook_data: Dict[str, Any]) -> bool:
                         
                         logger.info(f"Активирована подписка для пользователя {db_user.telegram_id} до {subscription_end}")
                         
+                        # Автоматически добавляем пользователя в группу
+                        try:
+                            from app.services.group_management_service import GroupManagementService
+                            from app.services.telegram_service import TelegramService
+                            from config.settings import get_settings
+                            
+                            # Создаем бота для отправки уведомления
+                            settings = get_settings()
+                            from telegram import Bot
+                            bot = Bot(token=settings.BOT_TOKEN)
+                            telegram_service = TelegramService(bot)
+                            
+                            # Создаем сервис управления группой
+                            group_service = GroupManagementService(telegram_service, settings)
+                            
+                            # Автоматически добавляем пользователя в группу
+                            added_to_group = await group_service.auto_add_paid_user_to_group(db_user.telegram_id)
+                            
+                            if added_to_group:
+                                logger.info(f"✅ Пользователь {db_user.telegram_id} автоматически добавлен в группу")
+                            else:
+                                logger.warning(f"⚠️ Не удалось автоматически добавить пользователя {db_user.telegram_id} в группу")
+                            
+                        except Exception as e:
+                            logger.error(f"Ошибка автоматического добавления пользователя {db_user.telegram_id} в группу: {e}")
+                        
                         # Отправляем уведомление пользователю о успешной оплате
                         try:
                             from app.services.telegram_service import TelegramService

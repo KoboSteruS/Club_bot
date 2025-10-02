@@ -574,7 +574,7 @@ class TelegramService:
     
     async def kick_chat_member(self, chat_id: int, user_id: int) -> bool:
         """
-        Исключает пользователя из группы.
+        Временно исключает пользователя из группы (не банит навсегда).
         
         Args:
             chat_id: ID чата
@@ -584,8 +584,16 @@ class TelegramService:
             bool: True если пользователь исключен успешно
         """
         try:
-            await self.bot.ban_chat_member(chat_id=chat_id, user_id=user_id)
-            logger.info(f"✅ Пользователь {user_id} исключен из группы {chat_id}")
+            # Временно баним на 30 секунд, чтобы пользователь мог вернуться после оплаты
+            from datetime import datetime
+            until_date = int(datetime.utcnow().timestamp()) + 30
+            
+            await self.bot.ban_chat_member(
+                chat_id=chat_id, 
+                user_id=user_id,
+                until_date=until_date
+            )
+            logger.info(f"✅ Пользователь {user_id} временно исключен из группы {chat_id} (может вернуться через 30 сек)")
             return True
             
         except TelegramError as e:

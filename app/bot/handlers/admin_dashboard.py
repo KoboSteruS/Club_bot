@@ -521,6 +521,31 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
             
             await update.message.reply_text(success_message, parse_mode='HTML')
             
+            # Автоматически добавляем пользователя в группу
+            try:
+                from app.services.group_management_service import GroupManagementService
+                from app.services.telegram_service import TelegramService
+                from config.settings import get_settings
+                
+                # Создаем сервисы для добавления в группу
+                settings = get_settings()
+                telegram_service = TelegramService(context.bot)
+                group_service = GroupManagementService(telegram_service, settings)
+                
+                # Автоматически добавляем пользователя в группу
+                added_to_group = await group_service.auto_add_paid_user_to_group(target_user.telegram_id)
+                
+                if added_to_group:
+                    await update.message.reply_text("✅ Пользователь автоматически добавлен в группу!", parse_mode='HTML')
+                    logger.info(f"✅ Пользователь {target_user.telegram_id} автоматически добавлен в группу через админ панель")
+                else:
+                    await update.message.reply_text("⚠️ Пользователь получил доступ, но не удалось автоматически добавить в группу.", parse_mode='HTML')
+                    logger.warning(f"⚠️ Не удалось автоматически добавить пользователя {target_user.telegram_id} в группу через админ панель")
+                
+            except Exception as e:
+                logger.error(f"Ошибка автоматического добавления пользователя {target_user.telegram_id} в группу через админ панель: {e}")
+                await update.message.reply_text("⚠️ Пользователь получил доступ, но произошла ошибка при добавлении в группу.", parse_mode='HTML')
+            
             # Очищаем состояние
             context.user_data['waiting_for_user_id'] = False
             

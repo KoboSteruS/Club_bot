@@ -346,6 +346,110 @@ class GroupManagementService:
             logger.error(f"Ошибка добавления пользователя {telegram_id} в группу: {e}")
             return False
     
+    async def auto_add_paid_user_to_group(self, user_id: int) -> bool:
+        """
+        Автоматически добавляет оплатившего пользователя в группу.
+        
+        Args:
+            user_id: Telegram ID пользователя
+            
+        Returns:
+            bool: True если пользователь добавлен успешно
+        """
+        try:
+            async with get_db_session() as session:
+                user_service = UserService(session)
+                user = await user_service.get_user_by_telegram_id(user_id)
+                
+                if not user:
+                    logger.error(f"Пользователь {user_id} не найден в базе данных")
+                    return False
+                
+                # Проверяем, что у пользователя есть активная подписка
+                has_active_subscription = (
+                    user.status == "active" and 
+                    user.is_premium and 
+                    user.subscription_until and 
+                    user.subscription_until > datetime.utcnow()
+                )
+                
+                if not has_active_subscription:
+                    logger.warning(f"У пользователя {user_id} нет активной подписки")
+                    return False
+                
+                # Если пользователь уже в группе, не нужно его добавлять
+                if user.is_in_group:
+                    logger.info(f"Пользователь {user_id} уже в группе")
+                    return True
+                
+                # Сначала пытаемся разбанить пользователя (если он был забанен)
+                success = await self.add_user_to_group(user_id)
+                
+                if success:
+                    logger.info(f"✅ Пользователь {user_id} автоматически добавлен в группу")
+                    return True
+                else:
+                    # Если разбан не сработал, отправляем приглашение
+                    logger.info(f"Пользователь {user_id} не был забанен, отправляем приглашение")
+                    return await self._send_group_invite(user_id)
+                    
+        except Exception as e:
+            logger.error(f"Ошибка автоматического добавления пользователя {user_id} в группу: {e}")
+            return False
+    
+    async def _send_group_invite(self, user_id: int) -> bool:
+        """
+        Отправляет приглашение пользователю в группу.
+        
+        Args:
+            user_id: Telegram ID пользователя
+            
+        Returns:
+            bool: True если приглашение отправлено успешно
+        """
+        try:
+            if not self.telegram_service or not self.telegram_service.bot:
+                logger.error("TelegramService не инициализирован")
+                return False
+            
+            # Создаем ссылку-приглашение
+            invite_link = await self.telegram_service.create_chat_invite_link()
+            if not invite_link:
+                logger.error(f"Не удалось создать ссылку-приглашение для пользователя {user_id}")
+                return False
+            
+            # Отправляем приглашение пользователю
+            message = f"""
+🎉 Добро пожаловать в клуб «ОСНОВА ПУТИ»!
+
+Твоя подписка активирована и ты можешь присоединиться к закрытой группе.
+
+🔗 Ссылка для входа: {invite_link}
+
+Увидимся в группе! 🚀
+"""
+            
+            await self.telegram_service.send_message(user_id, message)
+            
+            # Обновляем статус в базе данных
+            async with get_db_session() as session:
+                user_service = UserService(session)
+                user = await user_service.get_user_by_telegram_id(user_id)
+                
+                if user:
+                    from app.schemas.user import UserUpdate
+                    await user_service.update_user(str(user.id), UserUpdate(
+                        is_in_group=True,
+                        joined_group_at=datetime.utcnow()
+                    ))
+            
+            logger.info(f"✅ Пользователю {user_id} отправлено приглашение в группу")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Ошибка отправки приглашения пользователю {user_id}: {e}")
+            return False
+    
     async def _sync_group_members_status(self, user_service: UserService) -> None:
         """Синхронизирует статус пользователей в группе с реальным состоянием."""
         try:
