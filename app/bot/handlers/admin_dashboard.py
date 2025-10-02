@@ -636,6 +636,9 @@ async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_T
             else:
                 message += "Нет данных об активности пользователей"
             
+            # Добавляем временную метку для уникальности сообщения
+            message += f"\n⏰ Обновлено: {datetime.utcnow().strftime('%H:%M:%S')}"
+            
             keyboard = InlineKeyboardMarkup([
                 [InlineKeyboardButton("📊 По чатам", callback_data="admin_activity_by_chats")],
                 [InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_dashboard")]
@@ -686,6 +689,9 @@ async def admin_activity_by_chats_handler(update: Update, context: ContextTypes.
 • Топ типы: Текст({chat_stats.get('message_types', {}).get('message', 0)}), Фото({chat_stats.get('message_types', {}).get('photo', 0)}), Голос({chat_stats.get('message_types', {}).get('voice', 0)})
 
 """
+            
+            # Добавляем временную метку для уникальности сообщения
+            message += f"\n⏰ Обновлено: {datetime.utcnow().strftime('%H:%M:%S')}"
             
             keyboard = InlineKeyboardMarkup([
                 [InlineKeyboardButton("📊 Общая статистика", callback_data="admin_activity")],
