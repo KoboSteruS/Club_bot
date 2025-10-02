@@ -1076,9 +1076,10 @@ async def admin_check_subscriptions_handler(update: Update, context: ContextType
         # Импортируем сервис управления группой
         from app.services.group_management_service import GroupManagementService
         
-        # Получаем бота из контекста
-        bot = context.bot
-        group_service = GroupManagementService(bot)
+        # Создаем сервисы
+        settings = get_settings()
+        telegram_service = TelegramService(context.bot)
+        group_service = GroupManagementService(telegram_service, settings)
         
         # Выполняем проверку
         results = await group_service.check_subscriptions_and_kick_unpaid()
