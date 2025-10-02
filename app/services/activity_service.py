@@ -561,15 +561,15 @@ class ActivityService:
             
             stmt = (
                 select(
-                    UserActivity.user_id,
+                    ChatActivity.user_id,
                     User.first_name,
                     User.username,
-                    func.sum(UserActivity.total_messages).label('activity_count')
+                    func.count(ChatActivity.id).label('activity_count')
                 )
-                .join(User, UserActivity.user_id == User.id)
-                .where(UserActivity.period_date >= since_date)
-                .group_by(UserActivity.user_id, User.first_name, User.username)
-                .order_by(func.sum(UserActivity.total_messages).desc())
+                .join(User, ChatActivity.user_id == User.id)
+                .where(ChatActivity.activity_date >= since_date)
+                .group_by(ChatActivity.user_id, User.first_name, User.username)
+                .order_by(func.count(ChatActivity.id).desc())
                 .limit(limit)
             )
             
