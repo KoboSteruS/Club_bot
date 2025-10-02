@@ -524,8 +524,6 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
             # Автоматически добавляем пользователя в группу
             try:
                 from app.services.group_management_service import GroupManagementService
-                from app.services.telegram_service import TelegramService
-                from config.settings import get_settings
                 
                 # Создаем сервисы для добавления в группу
                 settings = get_settings()
