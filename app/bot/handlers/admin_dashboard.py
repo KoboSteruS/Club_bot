@@ -539,7 +539,7 @@ async def handle_user_id_input(update: Update, context: ContextTypes.DEFAULT_TYP
                 logger.info(f"🔧 TelegramService создан успешно")
                 
                 logger.info(f"🔧 Создаем GroupManagementService...")
-                group_service = GroupManagementService(telegram_service, settings)
+                group_service = GroupManagementService(context.bot)
                 logger.info(f"🔧 GroupManagementService создан успешно")
                 
                 # Автоматически добавляем пользователя в группу
@@ -1090,9 +1090,7 @@ async def admin_check_subscriptions_handler(update: Update, context: ContextType
         )
         
         # Создаем сервисы
-        settings = get_settings()
-        telegram_service = TelegramService(context.bot)
-        group_service = GroupManagementService(telegram_service, settings)
+        group_service = GroupManagementService(context.bot)
         
         # Выполняем проверку
         results = await group_service.check_subscriptions_and_kick_unpaid()
