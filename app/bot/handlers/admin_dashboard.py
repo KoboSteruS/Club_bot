@@ -591,15 +591,12 @@ async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_T
             yesterday = (datetime.utcnow() - timedelta(days=1)).date()
             week_ago = (datetime.utcnow() - timedelta(days=7)).date()
             
+            # Получаем общую статистику
+            overall_stats = await activity_service.get_overall_activity_stats(week_ago, today)
             activity_today = await activity_service.get_activity_stats_for_date(today)
             activity_yesterday = await activity_service.get_activity_stats_for_date(yesterday)
-            activity_week = await activity_service.get_activity_stats_for_period(week_ago, today)
             
-            # Получаем статистику по типам сообщений
-            message_types_today = await activity_service.get_message_types_stats_for_date(today)
-            message_types_week = await activity_service.get_message_types_stats_for_period(week_ago, today)
-            
-            message = f"""📈 <b>Детальная активность в группе</b>
+            message = f"""📈 <b>Общая активность по всем чатам</b>
 
 📅 <b>Сегодня ({today.strftime('%d.%m.%Y')}):</b>
 • Сообщений: {activity_today.get('messages', 0)}
@@ -609,31 +606,38 @@ async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_T
 • Сообщений: {activity_yesterday.get('messages', 0)}
 • Активных пользователей: {activity_yesterday.get('active_users', 0)}
 
-📊 <b>За неделю:</b>
-• Всего сообщений: {activity_week.get('messages', 0)}
-• Уникальных пользователей: {activity_week.get('active_users', 0)}
+📊 <b>За неделю (общая статистика):</b>
+• Всего сообщений: {overall_stats.get('total_messages', 0)}
+• Уникальных пользователей: {overall_stats.get('unique_users', 0)}
+• Активных чатов: {overall_stats.get('active_chats', 0)}
 
 🎯 <b>Типы сообщений за неделю:</b>
-• 💬 Текст: {message_types_week.get('message', 0)}
-• 🎤 Голосовые: {message_types_week.get('voice', 0)}
-• 📹 Видеосообщения: {message_types_week.get('video_note', 0)}
-• 🖼️ Фото: {message_types_week.get('photo', 0)}
-• 🎬 Видео: {message_types_week.get('video', 0)}
-• 🎵 Аудио: {message_types_week.get('audio', 0)}
-• 📄 Документы: {message_types_week.get('document', 0)}
-• 😀 Стикеры: {message_types_week.get('sticker', 0)}
-• 🎞️ GIF: {message_types_week.get('animation', 0)}
+• 💬 Текст: {overall_stats.get('message_types', {}).get('message', 0)}
+• 🎤 Голосовые: {overall_stats.get('message_types', {}).get('voice', 0)}
+• 📹 Видеосообщения: {overall_stats.get('message_types', {}).get('video_note', 0)}
+• 🖼️ Фото: {overall_stats.get('message_types', {}).get('photo', 0)}
+• 🎬 Видео: {overall_stats.get('message_types', {}).get('video', 0)}
+• 🎵 Аудио: {overall_stats.get('message_types', {}).get('audio', 0)}
+• 📄 Документы: {overall_stats.get('message_types', {}).get('document', 0)}
+• 😀 Стикеры: {overall_stats.get('message_types', {}).get('sticker', 0)}
+• 🎞️ GIF: {overall_stats.get('message_types', {}).get('animation', 0)}
 
-⚡ <b>Топ активных пользователей за неделю:</b>
+👥 <b>Все пользователи за неделю (по активности):</b>
 """
             
-            # Получаем топ активных пользователей
-            top_users = await activity_service.get_top_active_users(days=7, limit=5)
+            # Получаем всех пользователей (не топ, а всех)
+            all_users = await activity_service.get_top_active_users(days=7, limit=100)  # Увеличиваем лимит
             
-            for i, user in enumerate(top_users, 1):
-                message += f"{i}. {user.get('first_name', 'Неизвестно')} - {user.get('activity_count', 0)} сообщений\n"
+            if all_users:
+                for i, user in enumerate(all_users, 1):
+                    username = user.get('username', '')
+                    username_display = f"@{username}" if username else ""
+                    message += f"{i}. {user.get('first_name', 'Неизвестно')} {username_display} - {user.get('activity_count', 0)} сообщений\n"
+            else:
+                message += "Нет данных об активности пользователей"
             
             keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("📊 По чатам", callback_data="admin_activity_by_chats")],
                 [InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_dashboard")]
             ])
             
@@ -642,6 +646,57 @@ async def admin_activity_handler(update: Update, context: ContextTypes.DEFAULT_T
     except Exception as e:
         logger.error(f"Ошибка в admin_activity_handler: {e}")
         await query.edit_message_text("❌ Произошла ошибка при загрузке статистики активности.")
+
+
+async def admin_activity_by_chats_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик кнопки 'По чатам' в аналитике активности."""
+    try:
+        query = update.callback_query
+        await safe_answer_callback(query)
+        
+        user_id = update.effective_user.id
+        settings = get_settings()
+        
+        if user_id not in settings.admin_ids_list:
+            await query.edit_message_text("❌ У вас нет прав администратора.")
+            return
+        
+        async with get_db_session() as session:
+            activity_service = ActivityService(session)
+            
+            # Получаем статистику активности
+            today = datetime.utcnow().date()
+            yesterday = (datetime.utcnow() - timedelta(days=1)).date()
+            week_ago = (datetime.utcnow() - timedelta(days=7)).date()
+            
+            message = f"""📈 <b>Активность по чатам</b>
+
+📅 <b>Период: {week_ago.strftime('%d.%m.%Y')} - {today.strftime('%d.%m.%Y')}</b>
+
+"""
+            
+            # Получаем статистику по каждому чату
+            for chat_id in settings.all_chat_ids:
+                chat_name = settings.chat_names.get(chat_id, f"Чат {chat_id}")
+                chat_stats = await activity_service.get_activity_stats_by_chat(chat_id, week_ago, today)
+                
+                message += f"""💬 <b>{chat_name}</b>
+• Сообщений: {chat_stats.get('total_messages', 0)}
+• Пользователей: {chat_stats.get('unique_users', 0)}
+• Топ типы: Текст({chat_stats.get('message_types', {}).get('message', 0)}), Фото({chat_stats.get('message_types', {}).get('photo', 0)}), Голос({chat_stats.get('message_types', {}).get('voice', 0)})
+
+"""
+            
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("📊 Общая статистика", callback_data="admin_activity")],
+                [InlineKeyboardButton("🔙 Назад к панели", callback_data="admin_dashboard")]
+            ])
+            
+            await query.edit_message_text(message, reply_markup=keyboard, parse_mode='HTML')
+            
+    except Exception as e:
+        logger.error(f"Ошибка в admin_activity_by_chats_handler: {e}")
+        await query.edit_message_text("❌ Произошла ошибка при загрузке статистики по чатам.")
 
 
 async def admin_refresh_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
