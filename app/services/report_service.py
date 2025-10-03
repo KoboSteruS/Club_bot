@@ -326,3 +326,31 @@ class ReportService:
         except Exception as e:
             logger.error(f"Ошибка получения пользователей для напоминания: {e}")
             return []
+    
+    async def get_all_active_users(self) -> List[User]:
+        """
+        Получение всех активных пользователей для еженедельных отчетов.
+        
+        Returns:
+            List[User]: Список активных пользователей
+        """
+        try:
+            today = datetime.now().date()
+            
+            # Получаем всех активных пользователей с действующей подпиской
+            conditions = [
+                User.status == "active",
+                or_(
+                    User.subscription_until.is_(None),
+                    func.date(User.subscription_until) > today
+                )
+            ]
+            
+            stmt = select(User).where(and_(*conditions))
+            
+            result = await self.session.execute(stmt)
+            return list(result.scalars().all())
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения всех активных пользователей: {e}")
+            return []

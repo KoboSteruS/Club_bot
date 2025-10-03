@@ -45,26 +45,29 @@ class SchedulerService:
     def _setup_jobs(self) -> None:
         """Настройка планируемых задач."""
         try:
-            # Ежедневное напоминание об отчете в 21:00
-            # Персональные напоминания об отчетах (каждую минуту)
-            # Проверяем всех пользователей и отправляем напоминания в их персональное время
+            # Еженедельное напоминание об отчете (воскресенье в 21:00)
+            # Персональные напоминания об отчетах только по воскресеньям
             self.scheduler.add_job(
-                self.send_daily_report_reminders,
-                CronTrigger(minute='*'),  # Каждую минуту
-                id='daily_report_reminders',
-                name='Персональные напоминания об отчетах'
+                self.send_weekly_report_reminders,
+                CronTrigger(
+                    day_of_week=0,  # Воскресенье
+                    hour=21,
+                    minute=0
+                ),
+                id='weekly_report_reminders',
+                name='Еженедельные напоминания об отчетах'
             )
             
-            # Еженедельное напоминание о постановке цели (воскресенье в 10:00)
+            # Ежемесячное напоминание о постановке цели (1 число каждого месяца в 10:00)
             self.scheduler.add_job(
-                self.send_weekly_goal_reminders,
+                self.send_monthly_goal_reminders,
                 CronTrigger(
-                    day_of_week=settings.GOAL_DAY_OF_WEEK,
+                    day=1,  # 1 число каждого месяца
                     hour=10,
                     minute=0
                 ),
-                id='weekly_goal_reminders',
-                name='Еженедельные напоминания о целях'
+                id='monthly_goal_reminders',
+                name='Ежемесячные напоминания о целях'
             )
             
             # Еженедельный анализ активности (воскресенье в 22:00)
@@ -180,34 +183,28 @@ class SchedulerService:
         except Exception as e:
             logger.error(f"Ошибка настройки планировщика: {e}")
     
-    async def send_daily_report_reminders(self) -> None:
-        """Отправка ежедневных персональных напоминаний об отчетах."""
+    async def send_weekly_report_reminders(self) -> None:
+        """Отправка еженедельных напоминаний об отчетах (только по воскресеньям)."""
         try:
-            logger.info("Начинаем отправку персональных напоминаний об отчетах")
+            logger.info("Начинаем отправку еженедельных напоминаний об отчетах")
             
             async with get_db_session() as session:
                 report_service = ReportService(session)
                 telegram_service = TelegramService(self.bot)
                 
-                # Получаем текущее время
-                now = datetime.now()
-                
-                # Получаем пользователей, которым нужно отправить напоминания об отчетах в текущее время
-                users = await report_service.get_users_for_report_reminder(
-                    target_hour=now.hour,
-                    target_minute=now.minute
-                )
+                # Получаем всех активных пользователей для отправки еженедельного отчета
+                users = await report_service.get_all_active_users()
                 
                 count = 0
                 for user in users:
                     try:
                         
-                        # Проверяем, не отправили ли уже напоминание сегодня
+                        # Проверяем, не отправили ли уже напоминание на этой неделе
                         today = datetime.now().date()
                         existing_request = await report_service.get_report_by_date(str(user.id), datetime.now())
                         
                         if existing_request and existing_request.status == "sent":
-                            logger.debug(f"Отчет уже отправлен пользователем {user.telegram_id}, пропускаем напоминание")
+                            logger.debug(f"Еженедельный отчет уже отправлен пользователем {user.telegram_id}, пропускаем напоминание")
                             continue
                         
                         # Создаем запрос на отчет (если его нет)
@@ -218,18 +215,18 @@ class SchedulerService:
                         success = await telegram_service.send_report_reminder(user.telegram_id)
                         if success:
                             count += 1
-                            logger.info(f"Отправлено напоминание об отчете пользователю {user.telegram_id} в {now.hour:02d}:{now.minute:02d}")
+                            logger.info(f"Отправлено еженедельное напоминание об отчете пользователю {user.telegram_id}")
                         
                     except Exception as e:
-                        logger.error(f"Ошибка отправки напоминания об отчете пользователю {user.telegram_id}: {e}")
+                        logger.error(f"Ошибка отправки еженедельного напоминания об отчете пользователю {user.telegram_id}: {e}")
                 
-                logger.info(f"Отправлено {count} напоминаний об отчетах")
+                logger.info(f"Отправлено {count} еженедельных напоминаний об отчетах")
                 
         except Exception as e:
             logger.error(f"Ошибка отправки персональных напоминаний: {e}")
     
-    async def send_weekly_goal_reminders(self) -> None:
-        """Отправка еженедельных напоминаний о постановке целей."""
+    async def send_monthly_goal_reminders(self) -> None:
+        """Отправка ежемесячных напоминаний о постановке целей."""
         try:
             logger.info("Начинаем отправку напоминаний о целях")
             
@@ -237,15 +234,17 @@ class SchedulerService:
                 goal_service = GoalService(session)
                 telegram_service = TelegramService(self.bot)
                 
-                # Получаем пользователей для напоминания
-                users = await goal_service.get_users_for_goal_reminder()
+                # Получаем всех активных пользователей для ежемесячных целей
+                from app.services.report_service import ReportService
+                report_service = ReportService(session)
+                users = await report_service.get_all_active_users()
                 
                 count = 0
                 for user in users:
                     try:
                         # Создаем запрос на цель
                         today = datetime.now()
-                        await goal_service.create_goal_request(user.id, today)
+                        await goal_service.create_goal_request(str(user.id), today)
                         
                         # Отправляем напоминание
                         success = await telegram_service.send_goal_reminder(user.telegram_id)
