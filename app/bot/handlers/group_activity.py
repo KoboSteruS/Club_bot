@@ -197,8 +197,15 @@ async def group_message_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 media_file_size=media_file_size
             )
             
-            await activity_service.create_chat_activity(activity_data)
-            logger.info(f"✅ Сохранена активность: {activity_type} от пользователя {user.id} (@{user.username}) в чате {chat_id}")
+            # Записываем активность в отдельной сессии, чтобы не откатывалась при ошибках
+            try:
+                async with get_db_session() as activity_session:
+                    activity_service_isolated = ActivityService(activity_session)
+                    await activity_service_isolated.create_chat_activity(activity_data)
+                logger.info(f"✅ Сохранена активность: {activity_type} от пользователя {user.id} (@{user.username}) в чате {chat_id}")
+            except Exception as activity_error:
+                logger.error(f"❌ Ошибка записи активности: {activity_error}")
+                # Не прерываем основной поток обработки
             
     except Exception as e:
         logger.error(f"❌ Ошибка обработки сообщения из группы: {e}")
