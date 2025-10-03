@@ -694,7 +694,8 @@ async def admin_activity_by_chats_handler(update: Update, context: ContextTypes.
             # Получаем статистику по каждому чату
             for chat_id in settings.all_chat_ids:
                 chat_name = settings.chat_names.get(chat_id, f"Чат {chat_id}")
-                chat_stats = await activity_service.get_activity_stats_by_chat(chat_id, week_ago, today)
+                chat_stats_dict = await activity_service.get_activity_stats_by_chat(week_ago, today)
+                chat_stats = chat_stats_dict.get(chat_id, {})
                 
                 message += f"""💬 <b>{chat_name}</b>
 • Сообщений: {chat_stats.get('total_messages', 0)}
