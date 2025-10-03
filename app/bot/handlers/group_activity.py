@@ -30,15 +30,25 @@ async def group_message_handler(update: Update, context: ContextTypes.DEFAULT_TY
             logger.debug("Сообщение не из группы или нет chat")
             return
             
-        chat_id = str(update.message.chat.id)
+        base_chat_id = str(update.message.chat.id)
         settings = get_settings()
         
-        logger.debug(f"Получено сообщение из чата {chat_id}, ожидаем {settings.GROUP_ID}")
+        logger.debug(f"Получено сообщение из чата {base_chat_id}, ожидаем {settings.GROUP_ID}")
         
         # Проверяем, что сообщение из нашей группы
-        if chat_id != settings.GROUP_ID:
-            logger.debug(f"Сообщение не из нашей группы: {chat_id} != {settings.GROUP_ID}")
+        if base_chat_id != settings.GROUP_ID:
+            logger.debug(f"Сообщение не из нашей группы: {base_chat_id} != {settings.GROUP_ID}")
             return
+        
+        # Определяем полный ID чата с учетом топика
+        chat_id = base_chat_id
+        if update.message.message_thread_id:
+            # Это сообщение из топика
+            chat_id = f"{base_chat_id}_{update.message.message_thread_id}"
+            logger.debug(f"Сообщение из топика: {chat_id}")
+        else:
+            # Это сообщение из основной группы
+            logger.debug(f"Сообщение из основной группы: {chat_id}")
             
         # Проверяем, что это не бот
         if update.message.from_user.is_bot:
