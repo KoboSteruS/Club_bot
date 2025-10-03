@@ -17,8 +17,8 @@ from loguru import logger
 # Настройка логирования
 logger.add("logs/migration.log", rotation="1 MB", level="DEBUG")
 
-DATABASE_PATH = "data/clubbot.db"
-BACKUP_PATH = "data/clubbot_backup.db"
+DATABASE_PATH = "club_bot.db"
+BACKUP_PATH = "club_bot_backup.db"
 
 async def backup_database():
     """Создание резервной копии базы данных."""
