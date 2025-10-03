@@ -113,7 +113,6 @@ class ActivityService:
                 
                 session.add(activity)
                 await session.commit()
-                await session.refresh(activity)
                 
                 logger.debug(f"Записана активность пользователя {activity_data.user_id} в изолированной сессии: {activity_data.activity_type}")
                 return activity
