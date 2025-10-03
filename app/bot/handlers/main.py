@@ -81,10 +81,6 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             await handle_payment_create(update, context)
         elif callback_data.startswith("check_payment_"):
             await handle_payment_check(update, context)
-        elif callback_data == "get_access_card":
-            await handle_get_access_card(update, context)
-        elif callback_data == "get_access_sbp":
-            await handle_get_access_sbp(update, context)
         else:
             await query.edit_message_text("❌ Неизвестная команда")
             
@@ -445,17 +441,17 @@ async def handle_card_payment(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 <b>Инструкция:</b>
 1️⃣ Переведите точно $33 в Euro на указанную карту
-2️⃣ Нажмите "Получить доступ"
-3️⃣ Доступ активируется мгновенно
+2️⃣ Свяжитесь с администратором для подтверждения
+3️⃣ Получите доступ после проверки платежа
 
 ⚠️ <b>Важно:</b>
 • Указывайте точную сумму $33
-• Доступ активируется сразу после нажатия кнопки
+• Сохраните скриншот перевода
+• Доступ активируется после проверки администратором
 """
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Получить доступ", callback_data="get_access_card")],
-            [InlineKeyboardButton("🔙 Назад", callback_data="choose_payment_method")]
+            [InlineKeyboardButton("🔙 Назад", callback_data="subscription_confirmed")]
         ])
         
         await update.callback_query.edit_message_text(
@@ -485,17 +481,17 @@ async def handle_sbp_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 <b>Инструкция:</b>
 1️⃣ Переведите точно $33 в Rub на указанный номер через СБП
-2️⃣ Нажмите "Получить доступ"
-3️⃣ Доступ активируется мгновенно
+2️⃣ Свяжитесь с администратором для подтверждения
+3️⃣ Получите доступ после проверки платежа
 
 ⚠️ <b>Важно:</b>
 • Указывайте точную сумму $33
-• Доступ активируется сразу после нажатия кнопки
+• Сохраните скриншот перевода
+• Доступ активируется после проверки администратором
 """
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Получить доступ", callback_data="get_access_sbp")],
-            [InlineKeyboardButton("🔙 Назад", callback_data="choose_payment_method")]
+            [InlineKeyboardButton("🔙 Назад", callback_data="subscription_confirmed")]
         ])
         
         await update.callback_query.edit_message_text(
@@ -508,183 +504,6 @@ async def handle_sbp_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
         logger.error(f"Ошибка в handle_sbp_payment: {e}")
         await update.callback_query.answer("❌ Произошла ошибка")
 
-
-async def handle_get_access_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработка получения доступа через карточную оплату."""
-    try:
-        query = update.callback_query
-        user = update.effective_user
-        
-        # Активируем доступ пользователя
-        async with get_db_session() as session:
-            from app.services.user_service import UserService
-            from app.services.group_management_service import GroupManagementService
-            from app.services.telegram_service import TelegramService
-            from app.schemas.user import UserUpdate
-            from datetime import datetime, timedelta
-            
-            user_service = UserService(session)
-            
-            # Получаем пользователя из базы данных
-            db_user = await user_service.get_user_by_telegram_id(user.id)
-            
-            if not db_user:
-                # Создаем нового пользователя
-                from app.schemas.user import UserCreate
-                from app.models.user import UserStatus
-                
-                user_data = UserCreate(
-                    telegram_id=user.id,
-                    username=user.username,
-                    first_name=user.first_name,
-                    last_name=user.last_name,
-                    status=UserStatus.ACTIVE,
-                    subscription_until=datetime.now() + timedelta(days=30),
-                    is_premium=True,
-                    is_in_group=True,
-                    joined_group_at=datetime.now()
-                )
-                
-                db_user = await user_service.create_user(user_data)
-                logger.info(f"Создан новый пользователь {user.id} с доступом через карточную оплату")
-            else:
-                # Обновляем существующего пользователя
-                user_update = UserUpdate(
-                    status=UserStatus.ACTIVE,
-                    subscription_until=datetime.now() + timedelta(days=30),
-                    is_premium=True,
-                    is_in_group=True
-                )
-                
-                await user_service.update_user(str(db_user.id), user_update)
-                logger.info(f"Обновлен пользователь {user.id} с доступом через карточную оплату")
-            
-            # Добавляем пользователя в группу
-            try:
-                group_service = GroupManagementService(context.bot)
-                await group_service.auto_add_paid_user_to_group(user.id)
-                logger.info(f"Пользователь {user.id} добавлен в группу через карточную оплату")
-            except Exception as e:
-                logger.error(f"Ошибка добавления пользователя {user.id} в группу: {e}")
-        
-        message = """✅ <b>Доступ активирован!</b>
-
-🎉 <b>Добро пожаловать в клуб «ОСНОВА ПУТИ»!</b>
-
-<b>Ваш доступ активен до:</b> {subscription_until}
-
-<b>Что вас ждет:</b>
-🎯 Постановка месячных целей и их проверка
-📝 Еженедельные отчёты — видно, где ты держишь форму
-💬 Доступ в закрытый круг без флуда — только рост и поддержка
-🔎 Система наблюдения: твои результаты всегда на виду
-
-🚀 <b>Готовы начать путь к изменениям?</b>
-"""
-        
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🎯 Начать", callback_data="back_to_start")],
-            [InlineKeyboardButton("📘 Узнать больше", callback_data="about_club")]
-        ])
-        
-        await query.edit_message_text(
-            message,
-            reply_markup=keyboard,
-            parse_mode='HTML'
-        )
-        
-    except Exception as e:
-        logger.error(f"Ошибка в handle_get_access_card: {e}")
-        await update.callback_query.answer("❌ Произошла ошибка")
-
-
-async def handle_get_access_sbp(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработка получения доступа через СБП."""
-    try:
-        query = update.callback_query
-        user = update.effective_user
-        
-        # Активируем доступ пользователя
-        async with get_db_session() as session:
-            from app.services.user_service import UserService
-            from app.services.group_management_service import GroupManagementService
-            from app.services.telegram_service import TelegramService
-            from app.schemas.user import UserUpdate
-            from datetime import datetime, timedelta
-            
-            user_service = UserService(session)
-            
-            # Получаем пользователя из базы данных
-            db_user = await user_service.get_user_by_telegram_id(user.id)
-            
-            if not db_user:
-                # Создаем нового пользователя
-                from app.schemas.user import UserCreate
-                from app.models.user import UserStatus
-                
-                user_data = UserCreate(
-                    telegram_id=user.id,
-                    username=user.username,
-                    first_name=user.first_name,
-                    last_name=user.last_name,
-                    status=UserStatus.ACTIVE,
-                    subscription_until=datetime.now() + timedelta(days=30),
-                    is_premium=True,
-                    is_in_group=True,
-                    joined_group_at=datetime.now()
-                )
-                
-                db_user = await user_service.create_user(user_data)
-                logger.info(f"Создан новый пользователь {user.id} с доступом через СБП")
-            else:
-                # Обновляем существующего пользователя
-                user_update = UserUpdate(
-                    status=UserStatus.ACTIVE,
-                    subscription_until=datetime.now() + timedelta(days=30),
-                    is_premium=True,
-                    is_in_group=True
-                )
-                
-                await user_service.update_user(str(db_user.id), user_update)
-                logger.info(f"Обновлен пользователь {user.id} с доступом через СБП")
-            
-            # Добавляем пользователя в группу
-            try:
-                group_service = GroupManagementService(context.bot)
-                await group_service.auto_add_paid_user_to_group(user.id)
-                logger.info(f"Пользователь {user.id} добавлен в группу через СБП")
-            except Exception as e:
-                logger.error(f"Ошибка добавления пользователя {user.id} в группу: {e}")
-        
-        message = """✅ <b>Доступ активирован!</b>
-
-🎉 <b>Добро пожаловать в клуб «ОСНОВА ПУТИ»!</b>
-
-<b>Ваш доступ активен до:</b> {subscription_until}
-
-<b>Что вас ждет:</b>
-🎯 Постановка месячных целей и их проверка
-📝 Еженедельные отчёты — видно, где ты держишь форму
-💬 Доступ в закрытый круг без флуда — только рост и поддержка
-🔎 Система наблюдения: твои результаты всегда на виду
-
-🚀 <b>Готовы начать путь к изменениям?</b>
-"""
-        
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🎯 Начать", callback_data="back_to_start")],
-            [InlineKeyboardButton("📘 Узнать больше", callback_data="about_club")]
-        ])
-        
-        await query.edit_message_text(
-            message,
-            reply_markup=keyboard,
-            parse_mode='HTML'
-        )
-        
-    except Exception as e:
-        logger.error(f"Ошибка в handle_get_access_sbp: {e}")
-        await update.callback_query.answer("❌ Произошла ошибка")
 
 
 async def handle_payment_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
