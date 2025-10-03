@@ -27,17 +27,22 @@ async def group_message_handler(update: Update, context: ContextTypes.DEFAULT_TY
     try:
         # Проверяем, что сообщение из группы
         if not update.message or not update.message.chat:
+            logger.debug("Сообщение не из группы или нет chat")
             return
             
         chat_id = str(update.message.chat.id)
         settings = get_settings()
         
+        logger.debug(f"Получено сообщение из чата {chat_id}, ожидаем {settings.GROUP_ID}")
+        
         # Проверяем, что сообщение из нашей группы
         if chat_id != settings.GROUP_ID:
+            logger.debug(f"Сообщение не из нашей группы: {chat_id} != {settings.GROUP_ID}")
             return
             
         # Проверяем, что это не бот
         if update.message.from_user.is_bot:
+            logger.debug("Сообщение от бота, пропускаем")
             return
             
         user = update.message.from_user
@@ -193,10 +198,12 @@ async def group_message_handler(update: Update, context: ContextTypes.DEFAULT_TY
             )
             
             await activity_service.create_chat_activity(activity_data)
-            logger.debug(f"Сохранена активность: {activity_type} от пользователя {user.id}")
+            logger.info(f"✅ Сохранена активность: {activity_type} от пользователя {user.id} (@{user.username}) в чате {chat_id}")
             
     except Exception as e:
-        logger.error(f"Ошибка обработки сообщения из группы: {e}")
+        logger.error(f"❌ Ошибка обработки сообщения из группы: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
 
 
 async def group_member_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

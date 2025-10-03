@@ -534,14 +534,14 @@ class ActivityService:
         try:
             # Количество сообщений за дату
             messages_stmt = select(func.count(ChatActivity.id)).where(
-                func.date(ChatActivity.created_at) == target_date
+                ChatActivity.activity_date == target_date
             )
             messages_result = await self.session.execute(messages_stmt)
             messages_count = messages_result.scalar() or 0
             
             # Количество активных пользователей за дату
-            users_stmt = select(func.count(func.distinct(UserActivity.user_id))).where(
-                UserActivity.period_date == target_date
+            users_stmt = select(func.count(func.distinct(ChatActivity.user_id))).where(
+                ChatActivity.activity_date == target_date
             )
             users_result = await self.session.execute(users_stmt)
             active_users = users_result.scalar() or 0
