@@ -75,10 +75,16 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             await handle_back_to_start(update, context)
         elif callback_data == "subscription_confirmed":
             await handle_subscription_confirmed(update, context)
+        elif callback_data == "choose_payment_method":
+            await handle_choose_payment_method(update, context)
         elif callback_data.startswith("pay_"):
             await handle_payment_create(update, context)
         elif callback_data.startswith("check_payment_"):
             await handle_payment_check(update, context)
+        elif callback_data == "confirm_card_payment":
+            await handle_confirm_card_payment(update, context)
+        elif callback_data == "confirm_sbp_payment":
+            await handle_confirm_sbp_payment(update, context)
         else:
             await query.edit_message_text("❌ Неизвестная команда")
             
@@ -191,7 +197,7 @@ async def handle_payment_options(update: Update, context: ContextTypes.DEFAULT_T
 """
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("💎 Получить доступ - $33", callback_data="pay_monthly")],
+            [InlineKeyboardButton("💎 Выбрать способ оплаты", callback_data="choose_payment_method")],
             [InlineKeyboardButton("🔙 Назад", callback_data="back_to_start")]
         ])
         
@@ -203,6 +209,33 @@ async def handle_payment_options(update: Update, context: ContextTypes.DEFAULT_T
         
     except Exception as e:
         logger.error(f"Ошибка в handle_payment_options: {e}")
+        await update.callback_query.answer("❌ Произошла ошибка")
+
+
+async def handle_choose_payment_method(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка выбора способа оплаты."""
+    try:
+        message = """💳 <b>Выберите способ оплаты</b>
+
+<b>Доступ к клубу «ОСНОВА ПУТИ» - $33</b>
+
+Выберите удобный для вас способ оплаты:"""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("₿ Криптовалюта (USDT, TON, BTC, ETH)", callback_data="pay_crypto_monthly")],
+            [InlineKeyboardButton("💳 Зарубежная карта (Euro)", callback_data="pay_card_monthly")],
+            [InlineKeyboardButton("📱 СБП (Rub)", callback_data="pay_sbp_monthly")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="payment_options")]
+        ])
+        
+        await update.callback_query.edit_message_text(
+            message,
+            reply_markup=keyboard,
+            parse_mode='HTML'
+        )
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_choose_payment_method: {e}")
         await update.callback_query.answer("❌ Произошла ошибка")
 
 
@@ -270,20 +303,40 @@ async def handle_subscription_confirmed(update: Update, context: ContextTypes.DE
 
 
 async def handle_payment_create(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработка создания платежа через CryptoBot."""
+    """Обработка создания платежа."""
     try:
         query = update.callback_query
         user = update.effective_user
         callback_data = query.data
         
-        # Извлекаем тип тарифа
-        tariff_type = callback_data.replace("pay_", "")
+        # Извлекаем тип платежа
+        payment_type = callback_data.replace("pay_", "").replace("_monthly", "")
+        
+        if payment_type == "crypto":
+            await handle_crypto_payment(update, context)
+        elif payment_type == "card":
+            await handle_card_payment(update, context)
+        elif payment_type == "sbp":
+            await handle_sbp_payment(update, context)
+        else:
+            await query.edit_message_text("❌ Неизвестный способ оплаты")
+            
+    except Exception as e:
+        logger.error(f"Ошибка в handle_payment_create: {e}")
+        await update.callback_query.answer("❌ Произошла ошибка")
+
+
+async def handle_crypto_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка оплаты через криптовалюту."""
+    try:
+        query = update.callback_query
+        user = update.effective_user
         
         # Импортируем сервисы
         from app.services.crypto_service import CryptoService
         
         crypto_service = CryptoService()
-        tariff_info = crypto_service.get_tariff_info(tariff_type)
+        tariff_info = crypto_service.get_tariff_info("1month")
         
         # Создаем счет
         invoice = await crypto_service.create_invoice(
@@ -372,8 +425,246 @@ async def handle_payment_create(update: Update, context: ContextTypes.DEFAULT_TY
             )
         
     except Exception as e:
-        logger.error(f"Ошибка в handle_payment_create: {e}")
+        logger.error(f"Ошибка в handle_crypto_payment: {e}")
         await update.callback_query.answer("❌ Произошла ошибка при создании платежа")
+
+
+async def handle_card_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка оплаты через зарубежную карту."""
+    try:
+        message = """💳 <b>Оплата через зарубежную карту</b>
+
+<b>Тариф:</b> 1 месяц доступа
+<b>Стоимость:</b> $33 (Euro)
+<b>Длительность:</b> 30 дней
+
+<b>Реквизиты для оплаты:</b>
+💳 <b>Номер карты:</b> LT21 3250 0585 0073 1798
+💰 <b>Валюта:</b> Euro
+🏦 <b>Тип:</b> Зарубежная карта
+
+<b>Инструкция:</b>
+1️⃣ Переведите точно $33 в Euro на указанную карту
+2️⃣ Сохраните скриншот перевода
+3️⃣ Нажмите "Подтвердить оплату"
+4️⃣ Отправьте скриншот администратору
+5️⃣ Получите доступ после проверки
+
+⚠️ <b>Важно:</b>
+• Указывайте точную сумму $33
+• Сохраняйте скриншот перевода
+• Доступ активируется после проверки администратором
+"""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("✅ Подтвердить оплату", callback_data="confirm_card_payment")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="choose_payment_method")]
+        ])
+        
+        await update.callback_query.edit_message_text(
+            message,
+            reply_markup=keyboard,
+            parse_mode='HTML'
+        )
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_card_payment: {e}")
+        await update.callback_query.answer("❌ Произошла ошибка")
+
+
+async def handle_sbp_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка оплаты через СБП."""
+    try:
+        message = """📱 <b>Оплата через СБП</b>
+
+<b>Тариф:</b> 1 месяц доступа
+<b>Стоимость:</b> $33 (Rub)
+<b>Длительность:</b> 30 дней
+
+<b>Реквизиты для оплаты:</b>
+📱 <b>Номер телефона:</b> +7 992 182 0193
+💰 <b>Валюта:</b> Rub
+🏦 <b>Система:</b> СБП (Система быстрых платежей)
+
+<b>Инструкция:</b>
+1️⃣ Переведите точно $33 в Rub на указанный номер через СБП
+2️⃣ Сохраните скриншот перевода
+3️⃣ Нажмите "Подтвердить оплату"
+4️⃣ Отправьте скриншот администратору
+5️⃣ Получите доступ после проверки
+
+⚠️ <b>Важно:</b>
+• Указывайте точную сумму $33
+• Сохраняйте скриншот перевода
+• Доступ активируется после проверки администратором
+"""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("✅ Подтвердить оплату", callback_data="confirm_sbp_payment")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="choose_payment_method")]
+        ])
+        
+        await update.callback_query.edit_message_text(
+            message,
+            reply_markup=keyboard,
+            parse_mode='HTML'
+        )
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_sbp_payment: {e}")
+        await update.callback_query.answer("❌ Произошла ошибка")
+
+
+async def handle_confirm_card_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка подтверждения оплаты через карту."""
+    try:
+        query = update.callback_query
+        user = update.effective_user
+        
+        message = """✅ <b>Заявка на подтверждение оплаты принята!</b>
+
+<b>Ваша заявка отправлена администратору.</b>
+
+📋 <b>Что дальше:</b>
+1️⃣ Администратор проверит ваш перевод
+2️⃣ После подтверждения вы получите доступ к группе
+3️⃣ Уведомление придет в личные сообщения
+
+⏰ <b>Время обработки:</b> до 24 часов
+
+📞 <b>Если есть вопросы:</b>
+Напишите в личные сообщения боту - администратор ответит в течение 24 часов.
+
+🎯 <b>Спасибо за оплату!</b>
+Скоро увидимся в закрытом клубе «ОСНОВА ПУТИ»!
+"""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 В главное меню", callback_data="back_to_start")]
+        ])
+        
+        await query.edit_message_text(
+            message,
+            reply_markup=keyboard,
+            parse_mode='HTML'
+        )
+        
+        # Отправляем уведомление администратору
+        try:
+            admin_message = f"""
+🔔 <b>Новая заявка на подтверждение оплаты</b>
+
+👤 <b>Пользователь:</b> {user.first_name or 'Не указано'} {user.last_name or ''}
+🆔 <b>Telegram ID:</b> {user.id}
+📱 <b>Username:</b> @{user.username or 'Не указан'}
+
+💳 <b>Способ оплаты:</b> Зарубежная карта (Euro)
+💰 <b>Сумма:</b> $33
+🏦 <b>Реквизиты:</b> LT21 3250 0585 0073 1798
+
+⏰ <b>Время:</b> {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}
+
+📋 <b>Действия:</b>
+• Проверьте перевод на карту
+• Подтвердите доступ через админ-панель
+• Или свяжитесь с пользователем для уточнений
+"""
+            
+            from config.settings import get_settings
+            settings = get_settings()
+            
+            for admin_id in settings.ADMIN_IDS:
+                try:
+                    await context.bot.send_message(
+                        chat_id=admin_id,
+                        text=admin_message,
+                        parse_mode='HTML'
+                    )
+                except Exception as e:
+                    logger.error(f"Ошибка отправки уведомления админу {admin_id}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Ошибка отправки уведомления администратору: {e}")
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_confirm_card_payment: {e}")
+        await update.callback_query.answer("❌ Произошла ошибка")
+
+
+async def handle_confirm_sbp_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка подтверждения оплаты через СБП."""
+    try:
+        query = update.callback_query
+        user = update.effective_user
+        
+        message = """✅ <b>Заявка на подтверждение оплаты принята!</b>
+
+<b>Ваша заявка отправлена администратору.</b>
+
+📋 <b>Что дальше:</b>
+1️⃣ Администратор проверит ваш перевод
+2️⃣ После подтверждения вы получите доступ к группе
+3️⃣ Уведомление придет в личные сообщения
+
+⏰ <b>Время обработки:</b> до 24 часов
+
+📞 <b>Если есть вопросы:</b>
+Напишите в личные сообщения боту - администратор ответит в течение 24 часов.
+
+🎯 <b>Спасибо за оплату!</b>
+Скоро увидимся в закрытом клубе «ОСНОВА ПУТИ»!
+"""
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 В главное меню", callback_data="back_to_start")]
+        ])
+        
+        await query.edit_message_text(
+            message,
+            reply_markup=keyboard,
+            parse_mode='HTML'
+        )
+        
+        # Отправляем уведомление администратору
+        try:
+            admin_message = f"""
+🔔 <b>Новая заявка на подтверждение оплаты</b>
+
+👤 <b>Пользователь:</b> {user.first_name or 'Не указано'} {user.last_name or ''}
+🆔 <b>Telegram ID:</b> {user.id}
+📱 <b>Username:</b> @{user.username or 'Не указан'}
+
+📱 <b>Способ оплаты:</b> СБП (Rub)
+💰 <b>Сумма:</b> $33
+🏦 <b>Реквизиты:</b> +7 992 182 0193
+
+⏰ <b>Время:</b> {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}
+
+📋 <b>Действия:</b>
+• Проверьте перевод на номер телефона
+• Подтвердите доступ через админ-панель
+• Или свяжитесь с пользователем для уточнений
+"""
+            
+            from config.settings import get_settings
+            settings = get_settings()
+            
+            for admin_id in settings.ADMIN_IDS:
+                try:
+                    await context.bot.send_message(
+                        chat_id=admin_id,
+                        text=admin_message,
+                        parse_mode='HTML'
+                    )
+                except Exception as e:
+                    logger.error(f"Ошибка отправки уведомления админу {admin_id}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Ошибка отправки уведомления администратору: {e}")
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_confirm_sbp_payment: {e}")
+        await update.callback_query.answer("❌ Произошла ошибка")
 
 
 async def handle_payment_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
