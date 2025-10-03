@@ -50,7 +50,7 @@ def register_handlers(application: Application) -> None:
         application.add_handler(CommandHandler("groupinfo", group_info_handler))
         
         # Callback queries
-        application.add_handler(CallbackQueryHandler(main_handler, pattern="^(check_subscription|payment_options|about_club|back_to_start|subscription_confirmed|pay_|check_payment_|choose_payment_method|confirm_card_payment|confirm_sbp_payment)"))
+        application.add_handler(CallbackQueryHandler(main_handler, pattern="^(check_subscription|payment_options|about_club|back_to_start|subscription_confirmed|pay_|check_payment_|choose_payment_method|get_access_card|get_access_sbp)"))
         application.add_handler(CallbackQueryHandler(payment_handler, pattern="^payment"))
         application.add_handler(CallbackQueryHandler(report_handler, pattern="^report"))
         application.add_handler(CallbackQueryHandler(ritual_handler, pattern="^ritual_[^s]"))

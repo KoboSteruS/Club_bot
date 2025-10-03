@@ -81,10 +81,10 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             await handle_payment_create(update, context)
         elif callback_data.startswith("check_payment_"):
             await handle_payment_check(update, context)
-        elif callback_data == "confirm_card_payment":
-            await handle_confirm_card_payment(update, context)
-        elif callback_data == "confirm_sbp_payment":
-            await handle_confirm_sbp_payment(update, context)
+        elif callback_data == "get_access_card":
+            await handle_get_access_card(update, context)
+        elif callback_data == "get_access_sbp":
+            await handle_get_access_sbp(update, context)
         else:
             await query.edit_message_text("❌ Неизвестная команда")
             
@@ -445,19 +445,16 @@ async def handle_card_payment(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 <b>Инструкция:</b>
 1️⃣ Переведите точно $33 в Euro на указанную карту
-2️⃣ Сохраните скриншот перевода
-3️⃣ Нажмите "Подтвердить оплату"
-4️⃣ Отправьте скриншот администратору
-5️⃣ Получите доступ после проверки
+2️⃣ Нажмите "Получить доступ"
+3️⃣ Доступ активируется мгновенно
 
 ⚠️ <b>Важно:</b>
 • Указывайте точную сумму $33
-• Сохраняйте скриншот перевода
-• Доступ активируется после проверки администратором
+• Доступ активируется сразу после нажатия кнопки
 """
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Подтвердить оплату", callback_data="confirm_card_payment")],
+            [InlineKeyboardButton("✅ Получить доступ", callback_data="get_access_card")],
             [InlineKeyboardButton("🔙 Назад", callback_data="choose_payment_method")]
         ])
         
@@ -488,19 +485,16 @@ async def handle_sbp_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 <b>Инструкция:</b>
 1️⃣ Переведите точно $33 в Rub на указанный номер через СБП
-2️⃣ Сохраните скриншот перевода
-3️⃣ Нажмите "Подтвердить оплату"
-4️⃣ Отправьте скриншот администратору
-5️⃣ Получите доступ после проверки
+2️⃣ Нажмите "Получить доступ"
+3️⃣ Доступ активируется мгновенно
 
 ⚠️ <b>Важно:</b>
 • Указывайте точную сумму $33
-• Сохраняйте скриншот перевода
-• Доступ активируется после проверки администратором
+• Доступ активируется сразу после нажатия кнопки
 """
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Подтвердить оплату", callback_data="confirm_sbp_payment")],
+            [InlineKeyboardButton("✅ Получить доступ", callback_data="get_access_sbp")],
             [InlineKeyboardButton("🔙 Назад", callback_data="choose_payment_method")]
         ])
         
@@ -515,32 +509,82 @@ async def handle_sbp_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.callback_query.answer("❌ Произошла ошибка")
 
 
-async def handle_confirm_card_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработка подтверждения оплаты через карту."""
+async def handle_get_access_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка получения доступа через карточную оплату."""
     try:
         query = update.callback_query
         user = update.effective_user
         
-        message = """✅ <b>Заявка на подтверждение оплаты принята!</b>
+        # Активируем доступ пользователя
+        async with get_db_session() as session:
+            from app.services.user_service import UserService
+            from app.services.group_management_service import GroupManagementService
+            from app.services.telegram_service import TelegramService
+            from app.schemas.user import UserUpdate
+            from datetime import datetime, timedelta
+            
+            user_service = UserService(session)
+            
+            # Получаем пользователя из базы данных
+            db_user = await user_service.get_user_by_telegram_id(user.id)
+            
+            if not db_user:
+                # Создаем нового пользователя
+                from app.schemas.user import UserCreate
+                from app.models.user import UserStatus
+                
+                user_data = UserCreate(
+                    telegram_id=user.id,
+                    username=user.username,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    status=UserStatus.ACTIVE,
+                    subscription_until=datetime.now() + timedelta(days=30),
+                    is_premium=True,
+                    is_in_group=True,
+                    joined_group_at=datetime.now()
+                )
+                
+                db_user = await user_service.create_user(user_data)
+                logger.info(f"Создан новый пользователь {user.id} с доступом через карточную оплату")
+            else:
+                # Обновляем существующего пользователя
+                user_update = UserUpdate(
+                    status=UserStatus.ACTIVE,
+                    subscription_until=datetime.now() + timedelta(days=30),
+                    is_premium=True,
+                    is_in_group=True
+                )
+                
+                await user_service.update_user(str(db_user.id), user_update)
+                logger.info(f"Обновлен пользователь {user.id} с доступом через карточную оплату")
+            
+            # Добавляем пользователя в группу
+            try:
+                group_service = GroupManagementService(context.bot)
+                await group_service.auto_add_paid_user_to_group(user.id)
+                logger.info(f"Пользователь {user.id} добавлен в группу через карточную оплату")
+            except Exception as e:
+                logger.error(f"Ошибка добавления пользователя {user.id} в группу: {e}")
+        
+        message = """✅ <b>Доступ активирован!</b>
 
-<b>Ваша заявка отправлена администратору.</b>
+🎉 <b>Добро пожаловать в клуб «ОСНОВА ПУТИ»!</b>
 
-📋 <b>Что дальше:</b>
-1️⃣ Администратор проверит ваш перевод
-2️⃣ После подтверждения вы получите доступ к группе
-3️⃣ Уведомление придет в личные сообщения
+<b>Ваш доступ активен до:</b> {subscription_until}
 
-⏰ <b>Время обработки:</b> до 24 часов
+<b>Что вас ждет:</b>
+🎯 Постановка месячных целей и их проверка
+📝 Еженедельные отчёты — видно, где ты держишь форму
+💬 Доступ в закрытый круг без флуда — только рост и поддержка
+🔎 Система наблюдения: твои результаты всегда на виду
 
-📞 <b>Если есть вопросы:</b>
-Напишите в личные сообщения боту - администратор ответит в течение 24 часов.
-
-🎯 <b>Спасибо за оплату!</b>
-Скоро увидимся в закрытом клубе «ОСНОВА ПУТИ»!
+🚀 <b>Готовы начать путь к изменениям?</b>
 """
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔙 В главное меню", callback_data="back_to_start")]
+            [InlineKeyboardButton("🎯 Начать", callback_data="back_to_start")],
+            [InlineKeyboardButton("📘 Узнать больше", callback_data="about_club")]
         ])
         
         await query.edit_message_text(
@@ -549,74 +593,87 @@ async def handle_confirm_card_payment(update: Update, context: ContextTypes.DEFA
             parse_mode='HTML'
         )
         
-        # Отправляем уведомление администратору
-        try:
-            admin_message = f"""
-🔔 <b>Новая заявка на подтверждение оплаты</b>
-
-👤 <b>Пользователь:</b> {user.first_name or 'Не указано'} {user.last_name or ''}
-🆔 <b>Telegram ID:</b> {user.id}
-📱 <b>Username:</b> @{user.username or 'Не указан'}
-
-💳 <b>Способ оплаты:</b> Зарубежная карта (Euro)
-💰 <b>Сумма:</b> $33
-🏦 <b>Реквизиты:</b> LT21 3250 0585 0073 1798
-
-⏰ <b>Время:</b> {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}
-
-📋 <b>Действия:</b>
-• Проверьте перевод на карту
-• Подтвердите доступ через админ-панель
-• Или свяжитесь с пользователем для уточнений
-"""
-            
-            from config.settings import get_settings
-            settings = get_settings()
-            
-            for admin_id in settings.ADMIN_IDS:
-                try:
-                    await context.bot.send_message(
-                        chat_id=admin_id,
-                        text=admin_message,
-                        parse_mode='HTML'
-                    )
-                except Exception as e:
-                    logger.error(f"Ошибка отправки уведомления админу {admin_id}: {e}")
-                    
-        except Exception as e:
-            logger.error(f"Ошибка отправки уведомления администратору: {e}")
-        
     except Exception as e:
-        logger.error(f"Ошибка в handle_confirm_card_payment: {e}")
+        logger.error(f"Ошибка в handle_get_access_card: {e}")
         await update.callback_query.answer("❌ Произошла ошибка")
 
 
-async def handle_confirm_sbp_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработка подтверждения оплаты через СБП."""
+async def handle_get_access_sbp(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка получения доступа через СБП."""
     try:
         query = update.callback_query
         user = update.effective_user
         
-        message = """✅ <b>Заявка на подтверждение оплаты принята!</b>
+        # Активируем доступ пользователя
+        async with get_db_session() as session:
+            from app.services.user_service import UserService
+            from app.services.group_management_service import GroupManagementService
+            from app.services.telegram_service import TelegramService
+            from app.schemas.user import UserUpdate
+            from datetime import datetime, timedelta
+            
+            user_service = UserService(session)
+            
+            # Получаем пользователя из базы данных
+            db_user = await user_service.get_user_by_telegram_id(user.id)
+            
+            if not db_user:
+                # Создаем нового пользователя
+                from app.schemas.user import UserCreate
+                from app.models.user import UserStatus
+                
+                user_data = UserCreate(
+                    telegram_id=user.id,
+                    username=user.username,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    status=UserStatus.ACTIVE,
+                    subscription_until=datetime.now() + timedelta(days=30),
+                    is_premium=True,
+                    is_in_group=True,
+                    joined_group_at=datetime.now()
+                )
+                
+                db_user = await user_service.create_user(user_data)
+                logger.info(f"Создан новый пользователь {user.id} с доступом через СБП")
+            else:
+                # Обновляем существующего пользователя
+                user_update = UserUpdate(
+                    status=UserStatus.ACTIVE,
+                    subscription_until=datetime.now() + timedelta(days=30),
+                    is_premium=True,
+                    is_in_group=True
+                )
+                
+                await user_service.update_user(str(db_user.id), user_update)
+                logger.info(f"Обновлен пользователь {user.id} с доступом через СБП")
+            
+            # Добавляем пользователя в группу
+            try:
+                group_service = GroupManagementService(context.bot)
+                await group_service.auto_add_paid_user_to_group(user.id)
+                logger.info(f"Пользователь {user.id} добавлен в группу через СБП")
+            except Exception as e:
+                logger.error(f"Ошибка добавления пользователя {user.id} в группу: {e}")
+        
+        message = """✅ <b>Доступ активирован!</b>
 
-<b>Ваша заявка отправлена администратору.</b>
+🎉 <b>Добро пожаловать в клуб «ОСНОВА ПУТИ»!</b>
 
-📋 <b>Что дальше:</b>
-1️⃣ Администратор проверит ваш перевод
-2️⃣ После подтверждения вы получите доступ к группе
-3️⃣ Уведомление придет в личные сообщения
+<b>Ваш доступ активен до:</b> {subscription_until}
 
-⏰ <b>Время обработки:</b> до 24 часов
+<b>Что вас ждет:</b>
+🎯 Постановка месячных целей и их проверка
+📝 Еженедельные отчёты — видно, где ты держишь форму
+💬 Доступ в закрытый круг без флуда — только рост и поддержка
+🔎 Система наблюдения: твои результаты всегда на виду
 
-📞 <b>Если есть вопросы:</b>
-Напишите в личные сообщения боту - администратор ответит в течение 24 часов.
-
-🎯 <b>Спасибо за оплату!</b>
-Скоро увидимся в закрытом клубе «ОСНОВА ПУТИ»!
+🚀 <b>Готовы начать путь к изменениям?</b>
 """
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔙 В главное меню", callback_data="back_to_start")]
+            [InlineKeyboardButton("🎯 Начать", callback_data="back_to_start")],
+            [InlineKeyboardButton("📘 Узнать больше", callback_data="about_club")]
         ])
         
         await query.edit_message_text(
@@ -625,45 +682,8 @@ async def handle_confirm_sbp_payment(update: Update, context: ContextTypes.DEFAU
             parse_mode='HTML'
         )
         
-        # Отправляем уведомление администратору
-        try:
-            admin_message = f"""
-🔔 <b>Новая заявка на подтверждение оплаты</b>
-
-👤 <b>Пользователь:</b> {user.first_name or 'Не указано'} {user.last_name or ''}
-🆔 <b>Telegram ID:</b> {user.id}
-📱 <b>Username:</b> @{user.username or 'Не указан'}
-
-📱 <b>Способ оплаты:</b> СБП (Rub)
-💰 <b>Сумма:</b> $33
-🏦 <b>Реквизиты:</b> +7 992 182 0193
-
-⏰ <b>Время:</b> {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}
-
-📋 <b>Действия:</b>
-• Проверьте перевод на номер телефона
-• Подтвердите доступ через админ-панель
-• Или свяжитесь с пользователем для уточнений
-"""
-            
-            from config.settings import get_settings
-            settings = get_settings()
-            
-            for admin_id in settings.ADMIN_IDS:
-                try:
-                    await context.bot.send_message(
-                        chat_id=admin_id,
-                        text=admin_message,
-                        parse_mode='HTML'
-                    )
-                except Exception as e:
-                    logger.error(f"Ошибка отправки уведомления админу {admin_id}: {e}")
-                    
-        except Exception as e:
-            logger.error(f"Ошибка отправки уведомления администратору: {e}")
-        
     except Exception as e:
-        logger.error(f"Ошибка в handle_confirm_sbp_payment: {e}")
+        logger.error(f"Ошибка в handle_get_access_sbp: {e}")
         await update.callback_query.answer("❌ Произошла ошибка")
 
 
