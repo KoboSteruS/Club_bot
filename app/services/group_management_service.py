@@ -143,11 +143,23 @@ class GroupManagementService:
             logger.warning(f"⚠️ Не удалось проверить статус пользователя {user.telegram_id} в группе: {e}")
             # Продолжаем обработку, если не можем проверить через API
         
+        # Проверяем, отправляли ли уже предупреждение сегодня
+        today = datetime.utcnow().date()
+        last_warning_date = user.last_subscription_check.date() if user.last_subscription_check else None
+        
+        if last_warning_date == today:
+            logger.info(f"ℹ️ Пользователю {user.telegram_id} (@{user.username}) уже отправляли предупреждение сегодня, пропускаем")
+            return
+        
         # Если пользователь не оплатил, отправляем предупреждение
         logger.warning(f"⚠️ Пользователь {user.telegram_id} (@{user.username}) НЕ ОПЛАЧИВАЛ - отправляем предупреждение")
         
         warning_sent = await self._send_payment_warning(user)
         if warning_sent:
+            # Обновляем дату последнего предупреждения
+            user.last_subscription_check = datetime.utcnow()
+            await user_service.session.commit()
+            
             results["warnings_sent"] += 1
             results["details"].append({
                 "user_id": user.telegram_id,
