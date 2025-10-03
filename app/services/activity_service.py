@@ -73,6 +73,55 @@ class ActivityService:
     # Алиас для совместимости
     create_chat_activity = record_activity
     
+    @staticmethod
+    async def record_activity_isolated(activity_data: ChatActivityCreate) -> ChatActivity:
+        """
+        Записать активность пользователя в изолированной сессии.
+        
+        Этот метод создает собственную сессию для записи активности,
+        что предотвращает откат транзакций из-за ошибок в других операциях.
+        
+        Args:
+            activity_data: Данные активности для записи
+            
+        Returns:
+            ChatActivity: Созданная запись активности
+            
+        Raises:
+            ActivityException: При ошибке записи активности
+        """
+        from app.core.database import get_isolated_session
+        
+        try:
+            async with get_isolated_session() as session:
+                activity = ChatActivity(
+                    user_id=activity_data.user_id,
+                    chat_id=activity_data.chat_id,
+                    message_id=activity_data.message_id,
+                    activity_type=activity_data.activity_type,
+                    message_text=activity_data.message_text,
+                    message_length=activity_data.message_length,
+                    activity_date=activity_data.activity_date,
+                    activity_hour=activity_data.activity_hour,
+                    is_reply=activity_data.is_reply,
+                    is_forward=activity_data.is_forward,
+                    reply_to_user_id=activity_data.reply_to_user_id,
+                    media_file_id=activity_data.media_file_id,
+                    media_duration=activity_data.media_duration,
+                    media_file_size=activity_data.media_file_size
+                )
+                
+                session.add(activity)
+                await session.commit()
+                await session.refresh(activity)
+                
+                logger.debug(f"Записана активность пользователя {activity_data.user_id} в изолированной сессии: {activity_data.activity_type}")
+                return activity
+                
+        except Exception as e:
+            logger.error(f"Ошибка записи активности в изолированной сессии: {e}")
+            raise ActivityException(f"Не удалось записать активность: {e}")
+    
     async def get_user_activity_stats(self, user_id: str, period_type: ActivityPeriod, 
                                     start_date: date, end_date: Optional[date] = None) -> Dict[str, Any]:
         """Получить статистику активности пользователя за период."""

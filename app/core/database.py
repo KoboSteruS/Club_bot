@@ -78,6 +78,27 @@ async def get_db_session():
             await session.close()
 
 
+@asynccontextmanager
+async def get_isolated_session():
+    """
+    Получение изолированной сессии базы данных для коротких операций.
+    Каждая операция получает свою собственную сессию, что предотвращает
+    откат транзакций из-за ошибок в других операциях.
+    
+    Yields:
+        AsyncSession: Изолированная асинхронная сессия базы данных
+    """
+    async with async_session_maker() as session:
+        try:
+            yield session
+        except Exception as e:
+            logger.error(f"Ошибка в изолированной сессии базы данных: {e}")
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
 async def init_database() -> None:
     """Инициализация базы данных."""
     try:
