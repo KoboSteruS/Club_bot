@@ -93,8 +93,8 @@ class ActivityService:
                 .where(
                     and_(
                         ChatActivity.user_id == user_id,
-                        ChatActivity.activity_date >= start_date,
-                        ChatActivity.activity_date <= end_date
+                        func.date(ChatActivity.activity_date) >= start_date,
+                        func.date(ChatActivity.activity_date) <= end_date
                     )
                 )
             )
@@ -111,8 +111,8 @@ class ActivityService:
                 .where(
                     and_(
                         ChatActivity.user_id == user_id,
-                        ChatActivity.activity_date >= start_date,
-                        ChatActivity.activity_date <= end_date
+                        func.date(ChatActivity.activity_date) >= start_date,
+                        func.date(ChatActivity.activity_date) <= end_date
                     )
                 )
                 .group_by(ChatActivity.activity_type)
@@ -130,8 +130,8 @@ class ActivityService:
                 .where(
                     and_(
                         ChatActivity.user_id == user_id,
-                        ChatActivity.activity_date >= start_date,
-                        ChatActivity.activity_date <= end_date
+                        func.date(ChatActivity.activity_date) >= start_date,
+                        func.date(ChatActivity.activity_date) <= end_date
                     )
                 )
                 .group_by(ChatActivity.activity_hour)
@@ -534,14 +534,14 @@ class ActivityService:
         try:
             # Количество сообщений за дату
             messages_stmt = select(func.count(ChatActivity.id)).where(
-                ChatActivity.activity_date == target_date
+                func.date(ChatActivity.activity_date) == target_date
             )
             messages_result = await self.session.execute(messages_stmt)
             messages_count = messages_result.scalar() or 0
             
             # Количество активных пользователей за дату
             users_stmt = select(func.count(func.distinct(ChatActivity.user_id))).where(
-                ChatActivity.activity_date == target_date
+                func.date(ChatActivity.activity_date) == target_date
             )
             users_result = await self.session.execute(users_stmt)
             active_users = users_result.scalar() or 0
@@ -567,7 +567,7 @@ class ActivityService:
                     func.count(ChatActivity.id).label('activity_count')
                 )
                 .join(User, ChatActivity.user_id == User.id)
-                .where(ChatActivity.activity_date >= since_date)
+                .where(func.date(ChatActivity.activity_date) >= since_date)
                 .group_by(ChatActivity.user_id, User.first_name, User.username)
                 .order_by(func.count(ChatActivity.id).desc())
                 .limit(limit)
@@ -618,8 +618,8 @@ class ActivityService:
                 )
                 .where(
                     and_(
-                        ChatActivity.activity_date >= start_date,
-                        ChatActivity.activity_date <= end_date
+                        func.date(ChatActivity.activity_date) >= start_date,
+                        func.date(ChatActivity.activity_date) <= end_date
                     )
                 )
                 .group_by(ChatActivity.activity_type)
@@ -642,8 +642,8 @@ class ActivityService:
                 select(func.count(ChatActivity.id))
                 .where(
                     and_(
-                        ChatActivity.activity_date >= start_date,
-                        ChatActivity.activity_date <= end_date
+                        func.date(ChatActivity.activity_date) >= start_date,
+                        func.date(ChatActivity.activity_date) <= end_date
                     )
                 )
             )
@@ -654,8 +654,8 @@ class ActivityService:
                 select(func.count(func.distinct(ChatActivity.user_id)))
                 .where(
                     and_(
-                        ChatActivity.activity_date >= start_date,
-                        ChatActivity.activity_date <= end_date
+                        func.date(ChatActivity.activity_date) >= start_date,
+                        func.date(ChatActivity.activity_date) <= end_date
                     )
                 )
             )
@@ -689,8 +689,8 @@ class ActivityService:
                     .where(
                         and_(
                             ChatActivity.chat_id == chat_id,
-                            ChatActivity.activity_date >= start_date,
-                            ChatActivity.activity_date <= end_date
+                            func.date(ChatActivity.activity_date) >= start_date,
+                            func.date(ChatActivity.activity_date) <= end_date
                         )
                     )
                 )
@@ -707,8 +707,8 @@ class ActivityService:
                     .where(
                         and_(
                             ChatActivity.chat_id == chat_id,
-                            ChatActivity.activity_date >= start_date,
-                            ChatActivity.activity_date <= end_date
+                            func.date(ChatActivity.activity_date) >= start_date,
+                            func.date(ChatActivity.activity_date) <= end_date
                         )
                     )
                     .group_by(ChatActivity.activity_type)
@@ -729,8 +729,8 @@ class ActivityService:
                     .where(
                         and_(
                             ChatActivity.chat_id == chat_id,
-                            ChatActivity.activity_date >= start_date,
-                            ChatActivity.activity_date <= end_date
+                            func.date(ChatActivity.activity_date) >= start_date,
+                            func.date(ChatActivity.activity_date) <= end_date
                         )
                     )
                     .group_by(ChatActivity.user_id, User.first_name, User.username)
@@ -773,8 +773,8 @@ class ActivityService:
                 )
                 .where(
                     and_(
-                        ChatActivity.activity_date >= start_date,
-                        ChatActivity.activity_date <= end_date
+                        func.date(ChatActivity.activity_date) >= start_date,
+                        func.date(ChatActivity.activity_date) <= end_date
                     )
                 )
             )
@@ -790,8 +790,8 @@ class ActivityService:
                 )
                 .where(
                     and_(
-                        ChatActivity.activity_date >= start_date,
-                        ChatActivity.activity_date <= end_date
+                        func.date(ChatActivity.activity_date) >= start_date,
+                        func.date(ChatActivity.activity_date) <= end_date
                     )
                 )
                 .group_by(ChatActivity.activity_type)
@@ -811,8 +811,8 @@ class ActivityService:
                 .join(User, ChatActivity.user_id == User.id)
                 .where(
                     and_(
-                        ChatActivity.activity_date >= start_date,
-                        ChatActivity.activity_date <= end_date
+                        func.date(ChatActivity.activity_date) >= start_date,
+                        func.date(ChatActivity.activity_date) <= end_date
                     )
                 )
                 .group_by(ChatActivity.user_id, User.first_name, User.username)
@@ -864,7 +864,7 @@ class ActivityService:
                 .where(
                     and_(
                         ChatActivity.chat_id == chat_id,
-                        ChatActivity.activity_date >= start_date
+                        func.date(ChatActivity.activity_date) >= start_date
                     )
                 )
                 .group_by(ChatActivity.user_id, User.first_name, User.username)
