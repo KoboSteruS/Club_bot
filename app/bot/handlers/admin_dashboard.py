@@ -691,16 +691,49 @@ async def admin_activity_by_chats_handler(update: Update, context: ContextTypes.
 
 """
             
-            # Получаем статистику по каждому чату
-            for chat_id in settings.all_chat_ids:
-                chat_name = settings.chat_names.get(chat_id, f"Чат {chat_id}")
-                chat_stats_dict = await activity_service.get_activity_stats_by_chat(week_ago, today)
-                chat_stats = chat_stats_dict.get(chat_id, {})
+            # Получаем общую статистику по всем чатам
+            chat_stats_dict = await activity_service.get_activity_stats_by_chat(week_ago, today)
+            
+            # Группируем по основным чатам (без топиков)
+            main_chats = {}
+            for chat_id, stats in chat_stats_dict.items():
+                # Определяем основной чат (убираем суффикс топика)
+                if '_' in chat_id:
+                    main_chat = chat_id.split('_')[0]
+                else:
+                    main_chat = chat_id
+                
+                if main_chat not in main_chats:
+                    main_chats[main_chat] = {
+                        'total_messages': 0,
+                        'unique_users': 0,
+                        'message_types': {}
+                    }
+                
+                # Суммируем статистику
+                main_chats[main_chat]['total_messages'] += stats.get('total_messages', 0)
+                # unique_users уже число из stats, просто суммируем
+                if 'unique_users' not in main_chats[main_chat]:
+                    main_chats[main_chat]['unique_users'] = stats.get('unique_users', 0)
+                else:
+                    main_chats[main_chat]['unique_users'] += stats.get('unique_users', 0)
+                
+                # Суммируем типы сообщений
+                for msg_type, count in stats.get('message_types', {}).items():
+                    if msg_type not in main_chats[main_chat]['message_types']:
+                        main_chats[main_chat]['message_types'][msg_type] = 0
+                    main_chats[main_chat]['message_types'][msg_type] += count
+            
+            # Показываем статистику по основным чатам
+            for main_chat, stats in main_chats.items():
+                chat_name = settings.chat_names.get(main_chat, f"Чат {main_chat}")
+                if not chat_name:
+                    chat_name = "Основная группа"
                 
                 message += f"""💬 <b>{chat_name}</b>
-• Сообщений: {chat_stats.get('total_messages', 0)}
-• Пользователей: {chat_stats.get('unique_users', 0)}
-• Топ типы: Текст({chat_stats.get('message_types', {}).get('message', 0)}), Фото({chat_stats.get('message_types', {}).get('photo', 0)}), Голос({chat_stats.get('message_types', {}).get('voice', 0)})
+• Сообщений: {stats['total_messages']}
+• Пользователей: {stats['unique_users']}
+• Топ типы: Текст({stats['message_types'].get('message', 0)}), Фото({stats['message_types'].get('photo', 0)}), Голос({stats['message_types'].get('voice', 0)})
 
 """
             
